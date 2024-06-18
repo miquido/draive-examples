@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Chat"
+version = "0.1.0"
+maintainers = [
+  {name = "Kacper Kaliński", email = "kacper.kalinski@miquido.com"}
+]
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4~=4.12",
+    "curl_cffi~=0.6.2",
+    "draive[openai,gemini,ollama,fastembed]~=0.16.4",
+    "pdfminer.six==20231228",
+    "chainlit~=1.1",
+]
+
+[project.urls]
+Homepage = "https://miquido.com"
+
+[project.optional-dependencies]
+dev = [
+    "bandit~=1.7",
+    "pyright~=1.1",
+    "ruff~=0.4",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [".venv", ".git", ".cache"]
+lint.select = ["E", "F", "A", "I", "B", "PL", "W", "C", "RUF", "UP"]
+lint.ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "E402"]
+"./tests/*.py" = ["PLR2004"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["Argument", "draive.Argument"]
+
+
+[tool.pyright]
+pythonVersion = "3.12"
+venvPath = "./.venv"
+include = [
+  "./src",
+]
+exclude = [
+  "**/node_modules",
+  "**/__pycache__",
+]
+ignore = []
+reportMissingImports = true
+reportMissingTypeStubs = true
+typeCheckingMode = "strict"
+userFileIndexingLimit = -1
+useLibraryCodeForTypes = true
+
+[tool.pyright.analysis]
+diagnosticMode = "workspace"
