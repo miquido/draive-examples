@@ -1,6 +1,6 @@
 from asyncio import get_running_loop
 from base64 import b64encode
-from typing import Any, Final
+from typing import Any, Final, Literal, cast
 
 from chainlit import (
     Audio,
@@ -51,6 +51,11 @@ from draive import (
     load_env,
     setup_logging,
 )
+from draive.anthropic import (
+    AnthropicClient,
+    AnthropicConfig,
+    anthropic_lmm_invocation,
+)
 from draive.fastembed import FastembedTextConfig, fastembed_text_embedding
 from draive.gemini import (
     GeminiClient,
@@ -87,6 +92,7 @@ Prefer getting knowledge from those if able.
 # those are definitions of external services access methods
 dependencies: Final[ScopeDependencies] = ScopeDependencies(
     OpenAIClient,
+    AnthropicClient,
     GeminiClient,
     OllamaClient,
     WebsiteClient,
@@ -114,6 +120,11 @@ def prepare_profiles(user: Any) -> list[ChatProfile]:
             name="gemini-1.5-flash",
             markdown_description="**Gemini-Flash**\nMultimodal with tools",
             default=True,
+        ),
+        ChatProfile(
+            name="claude-sonnet-3.5",
+            markdown_description="**sonnet-3.5**\nMultimodal with tools",
+            default=False,
         ),
         ChatProfile(
             name="llama3:8B",
@@ -192,6 +203,7 @@ async def prepare() -> None:
                 [
                     LMM(invocation=ollama_lmm_invocation),
                     # TODO: use actual llama tokenizer
+                    OpenAIChatConfig(),  # using OpenAI config to select tokenizer
                     Tokenization(tokenize_text=openai_tokenize_text),
                     # use locally running embedding
                     FastembedTextConfig(model="nomic-ai/nomic-embed-text-v1.5"),
@@ -211,6 +223,23 @@ async def prepare() -> None:
                     TextEmbedding(embed=gemini_embed_text),
                     GeminiConfig(
                         model="gemini-1.5-flash",
+                        temperature=DEFAULT_TEMPERATURE,
+                    ),
+                ]
+            )
+
+        case "claude-sonnet-3.5":
+            state = state.updated(
+                [
+                    LMM(invocation=anthropic_lmm_invocation),
+                    # TODO: use actual claude tokenizer
+                    OpenAIChatConfig(),  # using OpenAI config to select tokenizer
+                    Tokenization(tokenize_text=openai_tokenize_text),
+                    # use locally running embedding
+                    FastembedTextConfig(model="nomic-ai/nomic-embed-text-v1.5"),
+                    TextEmbedding(embed=fastembed_text_embedding),
+                    AnthropicConfig(
+                        model="claude-3-5-sonnet-20240620",
                         temperature=DEFAULT_TEMPERATURE,
                     ),
                 ]
@@ -246,7 +275,6 @@ async def prepare() -> None:
 
 @on_settings_update
 async def update_settings(settings: dict[str, Any]) -> None:
-    print(settings)
     user_session.set(  # pyright: ignore[reportUnknownMemberType]
         "system_prompt",
         settings.get("system_prompt", DEFAULT_PROMPT),
@@ -384,7 +412,12 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                     parts.append(
                         ImageURLContent(
                             image_url=url,
-                            mime_type=image.mime,
+                            mime_type=cast(
+                                Literal["image/jpeg", "image/png", "image/gif"],
+                                image.mime
+                                if image.mime in ["image/jpeg", "image/png", "image/gif"]
+                                else None,
+                            ),
                         )
                     )
 
@@ -392,7 +425,12 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                     parts.append(
                         ImageBase64Content(
                             image_base64=await _load_file_b64(path),
-                            mime_type=image.mime,
+                            mime_type=cast(
+                                Literal["image/jpeg", "image/png", "image/gif"],
+                                image.mime
+                                if image.mime in ["image/jpeg", "image/png", "image/gif"]
+                                else None,
+                            ),
                         )
                     )
 
