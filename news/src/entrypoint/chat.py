@@ -5,7 +5,6 @@ from typing import Any, Final, Literal, cast
 from chainlit import (
     Audio,
     ChatProfile,
-    ChatSettings,
     Component,
     ErrorMessage,
     File,
@@ -16,14 +15,12 @@ from chainlit import (
     Step,
     Text,
     Video,
-    on_chat_start,  # type: ignore
-    on_message,  # type: ignore
-    on_settings_update,  # type: ignore
+    on_chat_start,  # type: ignore  # type: ignore
+    on_message,  # type: ignore  # type: ignore
     set_chat_profiles,  # type: ignore
-    set_starters,  # type: ignore
+    set_starters,  # type: ignore  # type: ignore
     user_session,
 )
-from chainlit.input_widget import TextInput
 from draive import (
     LMM,
     AudioBase64Content,
@@ -46,57 +43,32 @@ from draive import (
     VideoDataContent,
     VideoURLContent,
     VolatileAccumulativeMemory,
-    VolatileVectorIndex,
     ctx,
     load_env,
+    metrics_log_reporter,
     setup_logging,
 )
-from draive.anthropic import (
-    AnthropicClient,
-    AnthropicConfig,
-    anthropic_lmm_invocation,
-    anthropic_tokenize_text,
-)
-from draive.fastembed import FastembedTextConfig, fastembed_text_embedding
-from draive.gemini import (
-    GeminiClient,
-    GeminiConfig,
-    gemini_embed_text,
-    gemini_lmm_invocation,
-    gemini_tokenize_text,
-)
-from draive.ollama import OllamaChatConfig, OllamaClient, ollama_lmm_invocation
 from draive.openai import (
     OpenAIChatConfig,
     OpenAIClient,
+    OpenAIEmbeddingConfig,
     openai_embed_text,
     openai_lmm_invocation,
     openai_tokenize_text,
 )
 from features.chat import chat_respond
-from features.knowledge import index_pdf
-from integrations.websites import WebsiteClient
+from integrations.network import NetworkClient
 
 load_env()  # load env first if needed
 setup_logging("demo", "metrics")
 
-DEFAULT_TEMPERATURE: float = 0.75
-DEFAULT_PROMPT: str = """\
-You are a helpful assistant.
-
-You can access conversation documents by using "search" tool when user refers to the documents send.
-Prefer getting knowledge from those if able.
-"""
 
 # define dependencies globally - it will be reused for all chats
 # regardless of selected service selection
 # those are definitions of external services access methods
 dependencies: Final[ScopeDependencies] = ScopeDependencies(
+    NetworkClient,
     OpenAIClient,
-    AnthropicClient,
-    GeminiClient,
-    OllamaClient,
-    WebsiteClient,
 )
 
 
@@ -110,26 +82,11 @@ def prepare_profiles(user: Any) -> list[ChatProfile]:
         ChatProfile(
             name="gpt-3.5-turbo",
             markdown_description="**GPT-3.5**\nText only with tools",
-            default=False,
+            default=True,
         ),
         ChatProfile(
             name="gpt-4o",
             markdown_description="**GPT-4**\nMultimodal with tools",
-            default=False,
-        ),
-        ChatProfile(
-            name="gemini-1.5-flash",
-            markdown_description="**Gemini-Flash**\nMultimodal with tools",
-            default=True,
-        ),
-        ChatProfile(
-            name="claude-sonnet-3.5",
-            markdown_description="**sonnet-3.5**\nMultimodal with tools",
-            default=False,
-        ),
-        ChatProfile(
-            name="llama3:8B",
-            markdown_description="**LLama3**\nText only without tools, accessed through Ollama.",
             default=False,
         ),
     ]
@@ -144,13 +101,12 @@ def prepare_starters(user: Any) -> list[Starter]:
 
     return [
         Starter(
-            label="Explain superconductors",
-            message="Explain superconductors like I'm five years old.",
+            label="LLMs",
+            message="Prepare a news page with latest advancements in LLM field",
         ),
         Starter(
-            label="Python script for daily email reports",
-            message="Write a script to automate sending daily email reports in Python,"
-            " and walk me through how I would set it up.",
+            label="deepnewz",
+            message="Show me the latest news from https://deepnewz.com",
         ),
     ]
 
@@ -163,120 +119,43 @@ async def prepare() -> None:
     """
 
     # prepare chat session memory - we are using volatile memory
-    # which will return up to 8 last messages to the LLM context
+    # which will return up to 12 last messages to the LLM context
     user_session.set(  # pyright: ignore[reportUnknownMemberType]
         "chat_memory",
-        VolatileAccumulativeMemory[ConversationMessage]([], limit=8),
+        VolatileAccumulativeMemory[ConversationMessage]([], limit=12),
     )
     # select services based on current profile and form a base state for session
-    state: ScopeState = ScopeState(
-        VolatileVectorIndex(),  # it will be used as a knowledge base
-    )
+    config: OpenAIChatConfig
     match user_session.get("chat_profile"):  # pyright: ignore[reportUnknownMemberType]
         case "gpt-3.5-turbo":
-            state = state.updated(
-                [
-                    LMM(invocation=openai_lmm_invocation),
-                    Tokenization(tokenize_text=openai_tokenize_text),
-                    TextEmbedding(embed=openai_embed_text),
-                    OpenAIChatConfig(
-                        model="gpt-3.5-turbo",
-                        temperature=DEFAULT_TEMPERATURE,
-                    ),
-                ]
+            config = OpenAIChatConfig(
+                model="gpt-3.5-turbo",
+                temperature=0.75,
             )
 
         case "gpt-4o":
-            state = state.updated(
-                [
-                    LMM(invocation=openai_lmm_invocation),
-                    Tokenization(tokenize_text=openai_tokenize_text),
-                    TextEmbedding(embed=openai_embed_text),
-                    OpenAIChatConfig(
-                        model="gpt-4o",
-                        temperature=DEFAULT_TEMPERATURE,
-                    ),
-                ]
-            )
-
-        case "llama3:8B":
-            state = state.updated(
-                [
-                    LMM(invocation=ollama_lmm_invocation),
-                    # TODO: use actual llama tokenizer
-                    OpenAIChatConfig(),  # using OpenAI config to select tokenizer
-                    Tokenization(tokenize_text=openai_tokenize_text),
-                    # use locally running embedding
-                    FastembedTextConfig(model="nomic-ai/nomic-embed-text-v1.5"),
-                    TextEmbedding(embed=fastembed_text_embedding),
-                    OllamaChatConfig(
-                        model="llama3:8B",
-                        temperature=DEFAULT_TEMPERATURE,
-                    ),
-                ]
-            )
-
-        case "gemini-1.5-flash":
-            state = state.updated(
-                [
-                    LMM(invocation=gemini_lmm_invocation),
-                    Tokenization(tokenize_text=gemini_tokenize_text),
-                    TextEmbedding(embed=gemini_embed_text),
-                    GeminiConfig(
-                        model="gemini-1.5-flash",
-                        temperature=DEFAULT_TEMPERATURE,
-                    ),
-                ]
-            )
-
-        case "claude-sonnet-3.5":
-            state = state.updated(
-                [
-                    LMM(invocation=anthropic_lmm_invocation),
-                    Tokenization(tokenize_text=anthropic_tokenize_text),
-                    # use locally running embedding
-                    FastembedTextConfig(model="nomic-ai/nomic-embed-text-v1.5"),
-                    TextEmbedding(embed=fastembed_text_embedding),
-                    AnthropicConfig(
-                        model="claude-3-5-sonnet-20240620",
-                        temperature=DEFAULT_TEMPERATURE,
-                    ),
-                ]
+            config = OpenAIChatConfig(
+                model="gpt-4o",
+                temperature=0.75,
             )
 
         case other:  # pyright: ignore[reportUnknownVariableType]
             raise RuntimeError("Invalid profile %s", other)  # type: ignore
 
+    state: ScopeState = ScopeState(
+        LMM(invocation=openai_lmm_invocation),
+        Tokenization(tokenize_text=openai_tokenize_text),
+        TextEmbedding(embed=openai_embed_text),
+        OpenAIEmbeddingConfig(
+            model="text-embedding-3-small",
+        ),
+        config,
+    )
+
     # use selected services by setting up session state
     user_session.set(  # pyright: ignore[reportUnknownMemberType]
         "state",
         state,
-    )
-
-    # prepare system prompt
-    user_session.set(  # pyright: ignore[reportUnknownMemberType]
-        "system_prompt",
-        DEFAULT_PROMPT,
-    )
-
-    # prepare available settings
-    await ChatSettings(
-        [
-            TextInput(
-                id="system_prompt",
-                label="System prompt",
-                initial=DEFAULT_PROMPT,
-                multiline=True,
-            ),
-        ]
-    ).send()
-
-
-@on_settings_update
-async def update_settings(settings: dict[str, Any]) -> None:
-    user_session.set(  # pyright: ignore[reportUnknownMemberType]
-        "system_prompt",
-        settings.get("system_prompt", DEFAULT_PROMPT),
     )
 
 
@@ -294,13 +173,13 @@ async def message(  # noqa: C901, PLR0912
         "chat",
         state=user_session.get("state"),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
         dependencies=dependencies,
+        trace_reporting=metrics_log_reporter(),
     ):
         response_message: Message = Message(author="assistant", content="")
         await response_message.send()  # prepare message for streaming
         try:
             # request a chat conversation completion stream
             response_stream = await chat_respond(
-                instruction=user_session.get("system_prompt", DEFAULT_PROMPT),  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
                 # convert message from chainlit to draive
                 message=await _as_multimodal_content(
                     content=message.content,
@@ -476,17 +355,13 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                 else:
                     raise NotImplementedError("Unsupported video content")
 
-            case Pdf() as pdf:
-                if path := pdf.path:
-                    await index_pdf(source=path)
-
-                else:
-                    raise NotImplementedError("Unsupported pdf content")
+            case Pdf():
+                raise NotImplementedError("PDF input is not supported")
 
             case File() as file:
                 if path := file.path:
                     if path.endswith(".pdf"):
-                        await index_pdf(source=path)
+                        raise NotImplementedError("PDF input is not supported")
 
                     elif path.endswith(".mp3"):
                         parts.append(

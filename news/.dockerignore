@@ -1,0 +1,9 @@
+*
+!/Makefile
+!./pyproject.toml
+!./config/unit.json
+!./src
+!./public
+!./constraints
+!./.chainlit
+!./chainlit.md

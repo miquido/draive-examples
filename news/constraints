@@ -4,11 +4,8 @@ aiofiles==23.2.1
     # via chainlit
 annotated-types==0.7.0
     # via pydantic
-anthropic==0.29.2
-    # via draive
 anyio==3.7.1
     # via
-    #   anthropic
     #   asyncer
     #   httpx
     #   openai
@@ -17,9 +14,9 @@ anyio==3.7.1
 asyncer==0.0.2
     # via chainlit
 bandit==1.7.9
-    # via chat (pyproject.toml)
+    # via news (pyproject.toml)
 beautifulsoup4==4.12.3
-    # via chat (pyproject.toml)
+    # via news (pyproject.toml)
 bidict==0.23.1
     # via python-socketio
 certifi==2024.7.4
@@ -33,7 +30,7 @@ cffi==1.16.0
     #   cryptography
     #   curl-cffi
 chainlit==1.1.306
-    # via chat (pyproject.toml)
+    # via news (pyproject.toml)
 charset-normalizer==3.3.2
     # via
     #   pdfminer-six
@@ -44,12 +41,10 @@ click==8.1.7
     # via
     #   chainlit
     #   uvicorn
-coloredlogs==15.0.1
-    # via onnxruntime
 cryptography==42.0.8
     # via pdfminer-six
 curl-cffi==0.6.4
-    # via chat (pyproject.toml)
+    # via news (pyproject.toml)
 dataclasses-json==0.5.14
     # via chainlit
 deprecated==1.2.14
@@ -58,23 +53,13 @@ deprecated==1.2.14
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
 distro==1.9.0
-    # via
-    #   anthropic
-    #   openai
-draive==0.18.2
-    # via chat (pyproject.toml)
+    # via openai
+draive==0.18.1
+    # via news (pyproject.toml)
 fastapi==0.110.3
     # via chainlit
-fastembed==0.3.1
-    # via draive
-filelock==3.15.4
-    # via huggingface-hub
 filetype==1.2.0
     # via chainlit
-flatbuffers==24.3.25
-    # via onnxruntime
-fsspec==2024.6.1
-    # via huggingface-hub
 googleapis-common-protos==1.63.2
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
@@ -90,17 +75,9 @@ httpcore==1.0.5
     # via httpx
 httpx==0.27.0
     # via
-    #   anthropic
     #   chainlit
-    #   draive
     #   literalai
     #   openai
-huggingface-hub==0.23.4
-    # via
-    #   fastembed
-    #   tokenizers
-humanfriendly==10.0
-    # via coloredlogs
 idna==3.7
     # via
     #   anyio
@@ -108,24 +85,18 @@ idna==3.7
     #   requests
 importlib-metadata==7.1.0
     # via opentelemetry-api
-jiter==0.5.0
-    # via anthropic
 lazify==0.4.0
     # via chainlit
 literalai==0.0.607
     # via chainlit
-loguru==0.7.2
-    # via fastembed
+lxml==5.2.2
+    # via news (pyproject.toml)
 markdown-it-py==3.0.0
     # via rich
 marshmallow==3.21.3
     # via dataclasses-json
 mdurl==0.1.2
     # via markdown-it-py
-mmh3==4.1.0
-    # via fastembed
-mpmath==1.3.0
-    # via sympy
 mypy-extensions==1.0.0
     # via typing-inspect
 nest-asyncio==1.6.0
@@ -136,13 +107,6 @@ numpy==1.26.4
     # via
     #   chainlit
     #   draive
-    #   fastembed
-    #   onnx
-    #   onnxruntime
-onnx==1.16.1
-    # via fastembed
-onnxruntime==1.18.1
-    # via fastembed
 openai==1.35.10
     # via draive
 opentelemetry-api==1.25.0
@@ -180,27 +144,20 @@ opentelemetry-semantic-conventions==0.46b0
 packaging==23.2
     # via
     #   chainlit
-    #   huggingface-hub
     #   literalai
     #   marshmallow
-    #   onnxruntime
 pbr==6.0.0
     # via stevedore
 pdfminer-six==20231228
-    # via chat (pyproject.toml)
-pillow==10.4.0
-    # via fastembed
+    # via news (pyproject.toml)
 protobuf==4.25.3
     # via
     #   googleapis-common-protos
-    #   onnx
-    #   onnxruntime
     #   opentelemetry-proto
 pycparser==2.22
     # via cffi
 pydantic==2.8.2
     # via
-    #   anthropic
     #   chainlit
     #   fastapi
     #   literalai
@@ -212,9 +169,7 @@ pygments==2.18.0
 pyjwt==2.8.0
     # via chainlit
 pyright==1.1.370
-    # via chat (pyproject.toml)
-pystemmer==2.2.0.1
-    # via fastembed
+    # via news (pyproject.toml)
 python-dotenv==1.0.1
     # via chainlit
 python-engineio==4.9.1
@@ -224,35 +179,26 @@ python-multipart==0.0.9
 python-socketio==5.11.3
     # via chainlit
 pyyaml==6.0.1
-    # via
-    #   bandit
-    #   huggingface-hub
+    # via bandit
 regex==2024.5.15
     # via tiktoken
 requests==2.32.3
     # via
-    #   fastembed
-    #   huggingface-hub
     #   opentelemetry-exporter-otlp-proto-http
     #   tiktoken
 rich==13.7.1
     # via bandit
 ruff==0.5.0
-    # via chat (pyproject.toml)
-sentencepiece==0.2.0
-    # via draive
+    # via news (pyproject.toml)
 setuptools==70.2.0
     # via opentelemetry-instrumentation
 simple-websocket==1.0.0
     # via python-engineio
 sniffio==1.3.1
     # via
-    #   anthropic
     #   anyio
     #   httpx
     #   openai
-snowballstemmer==2.2.0
-    # via fastembed
 soupsieve==2.5
     # via beautifulsoup4
 starlette==0.37.2
@@ -261,28 +207,17 @@ starlette==0.37.2
     #   fastapi
 stevedore==5.2.0
     # via bandit
-sympy==1.12.1
-    # via onnxruntime
 syncer==2.0.3
     # via chainlit
 tiktoken==0.7.0
     # via draive
-tokenizers==0.19.1
-    # via
-    #   anthropic
-    #   fastembed
 tomli==2.0.1
     # via chainlit
 tqdm==4.66.4
-    # via
-    #   fastembed
-    #   huggingface-hub
-    #   openai
+    # via openai
 typing-extensions==4.12.2
     # via
-    #   anthropic
     #   fastapi
-    #   huggingface-hub
     #   openai
     #   opentelemetry-sdk
     #   pydantic

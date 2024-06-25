@@ -4,7 +4,11 @@ Examples of draive library usage.
 
 ## Chat
 
-Simple, locally running chat solution.
+Simple, locally running chat solution. Allows selecting from various LLM models and talk with a PDF.
+
+## News
+
+Example of agents workflow. Uses chat interface to provide a news page based on provided sources or topics.
 
 ## License
 

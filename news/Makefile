@@ -82,9 +82,12 @@ lint:
 	@ruff check $(SOURCES_PATH) $(TESTS_PATH)
 	@pyright --project ./
 
-# Run local server with hot reload.
+# Run local server
 run:
-	chainlit run ./src/entrypoint/chat.py -w
+	@echo "Running the server..."
+	@echo "Logs will be available in 'logs.txt' file"
+	@chainlit run ./src/entrypoint/chat.py > logs.txt
+	@echo "...server process completed!"
 
 # Run all services locally using docker-compose.
 docker_run:

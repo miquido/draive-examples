@@ -1,0 +1,15 @@
+version: "3.7"
+services:
+  chat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: chat
+    ports:
+      - ${CHAINLIT_PORT}:${CHAINLIT_PORT}
+    restart: no
+    environment:
+      PYTHONOPTIMIZE: 2
+      CHAINLIT_PORT: ${CHAINLIT_PORT}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}

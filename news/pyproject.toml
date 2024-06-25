@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Chat"
+name = "News"
 version = "0.1.0"
 maintainers = [
   {name = "Kacper Kaliński", email = "kacper.kalinski@miquido.com"}
@@ -11,8 +11,9 @@ maintainers = [
 requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4~=4.12",
+    "lxml~=5.2",
     "curl_cffi~=0.6.2",
-    "draive[openai,anthropic,gemini,ollama,fastembed]~=0.18",
+    "draive[openai]~=0.18",
     "pdfminer.six==20231228",
     "chainlit~=1.1",
 ]

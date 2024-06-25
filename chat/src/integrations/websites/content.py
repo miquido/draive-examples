@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
 from functools import cached_property
-from typing import Any, Self, cast
+from typing import Self, cast
 
 from bs4 import BeautifulSoup, Tag
+from draive import freeze
 
 __all__ = [
     "HTMLContent",
@@ -20,13 +21,7 @@ class HTMLContentPart:
     ) -> None:
         self._content: Tag = content
 
-        def frozen(
-            __name: str,
-            __value: Any,
-        ) -> None:
-            raise RuntimeError("Content can't be modified")
-
-        self.__setattr__ = frozen
+        freeze(self)
 
     @property
     def tag(self) -> str:
@@ -69,19 +64,7 @@ class HTMLContent:
         )
         self._last_update: datetime = last_update or datetime.now(UTC)
 
-        def frozen_set(
-            __name: str,
-            __value: Any,
-        ) -> None:
-            raise RuntimeError("Content can't be modified")
-
-        def frozen_del(
-            __name: str,
-        ) -> None:
-            raise RuntimeError("Content can't be modified")
-
-        self.__setattr__ = frozen_set
-        self.__delattr__ = frozen_del
+        freeze(self)
 
     def __str__(self) -> str:
         return f"[{self.last_update}] {self.source}"
