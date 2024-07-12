@@ -1,5 +1,6 @@
 from draive import (
     AgentError,
+    AgentException,
     AgentWorkflowInput,
     AgentWorkflowOutput,
     Memory,
@@ -44,6 +45,9 @@ async def news_workflow(  # noqa: C901, PLR0912, PLR0911
         else:
             # otherwise fail the workflow
             raise input
+
+    elif isinstance(input, AgentException):
+        raise input
 
     # when we have the result use it as the final result
     if result := input.content.artifacts(NewsPage):

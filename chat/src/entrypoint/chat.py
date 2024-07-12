@@ -41,7 +41,7 @@ from draive import (
     TextContent,
     TextEmbedding,
     Tokenization,
-    ToolCallStatus,
+    ToolStatus,
     VideoBase64Content,
     VideoDataContent,
     VideoURLContent,
@@ -327,7 +327,7 @@ async def message(  # noqa: C901, PLR0912
                                     response_message.elements.append(other)  # pyright: ignore[reportArgumentType]
                                     await response_message.update()
 
-                    case ToolCallStatus() as tool_status:
+                    case ToolStatus() as tool_status:
                         ctx.log_debug("Received tool status: %s", tool_status)
                         # for a tool status add or update its progress indicator
                         step: Step
@@ -346,7 +346,7 @@ async def message(  # noqa: C901, PLR0912
                                 case "STARTED":
                                     await step.send()
 
-                                case "RUNNING":
+                                case "PROGRESS":
                                     if content := tool_status.content:
                                         # stream tool update status if provided
                                         await step.stream_token(str(content))

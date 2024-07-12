@@ -54,7 +54,7 @@ deprecated==1.2.14
     #   opentelemetry-exporter-otlp-proto-http
 distro==1.9.0
     # via openai
-draive==0.18.1
+draive==0.20.0
     # via news (pyproject.toml)
 fastapi==0.110.3
     # via chainlit
@@ -64,7 +64,7 @@ googleapis-common-protos==1.63.2
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-grpcio==1.64.1
+grpcio==1.65.0
     # via opentelemetry-exporter-otlp-proto-grpc
 h11==0.14.0
     # via
@@ -107,7 +107,7 @@ numpy==1.26.4
     # via
     #   chainlit
     #   draive
-openai==1.35.10
+openai==1.35.13
     # via draive
 opentelemetry-api==1.25.0
     # via
@@ -168,7 +168,7 @@ pygments==2.18.0
     # via rich
 pyjwt==2.8.0
     # via chainlit
-pyright==1.1.370
+pyright==1.1.371
     # via news (pyproject.toml)
 python-dotenv==1.0.1
     # via chainlit
@@ -188,9 +188,9 @@ requests==2.32.3
     #   tiktoken
 rich==13.7.1
     # via bandit
-ruff==0.5.0
+ruff==0.5.1
     # via news (pyproject.toml)
-setuptools==70.2.0
+setuptools==70.3.0
     # via opentelemetry-instrumentation
 simple-websocket==1.0.0
     # via python-engineio

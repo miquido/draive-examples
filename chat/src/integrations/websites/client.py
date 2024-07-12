@@ -28,7 +28,7 @@ class WebsiteClient(ScopeDependency):
                 policy=DefaultCookiePolicy(allowed_domains=[]),
             ),
             timeout=30,
-            allow_redirects=False,
+            allow_redirects=True,
             impersonate="chrome",
             max_clients=32,
         )
