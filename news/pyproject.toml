@@ -13,7 +13,7 @@ dependencies = [
     "beautifulsoup4~=4.12",
     "lxml~=5.2",
     "curl_cffi~=0.6.2",
-    "draive[openai]~=0.20",
+    "draive[openai]~=0.21",
     "pdfminer.six==20231228",
     "chainlit~=1.1",
 ]
@@ -25,7 +25,7 @@ Homepage = "https://miquido.com"
 dev = [
     "bandit~=1.7",
     "pyright~=1.1",
-    "ruff~=0.4",
+    "ruff~=0.5",
 ]
 
 [tool.ruff]

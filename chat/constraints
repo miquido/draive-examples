@@ -61,11 +61,11 @@ distro==1.9.0
     # via
     #   anthropic
     #   openai
-draive==0.20.0
+draive==0.21.0
     # via chat (pyproject.toml)
 fastapi==0.110.3
     # via chainlit
-fastembed==0.3.3
+fastembed==0.3.4
     # via draive
 filelock==3.15.4
     # via huggingface-hub
@@ -79,7 +79,7 @@ googleapis-common-protos==1.63.2
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-grpcio==1.65.0
+grpcio==1.65.1
     # via opentelemetry-exporter-otlp-proto-grpc
 h11==0.14.0
     # via
@@ -95,7 +95,7 @@ httpx==0.27.0
     #   draive
     #   literalai
     #   openai
-huggingface-hub==0.23.4
+huggingface-hub==0.24.0
     # via
     #   fastembed
     #   tokenizers
@@ -143,7 +143,7 @@ onnx==1.16.1
     # via fastembed
 onnxruntime==1.18.1
     # via fastembed
-openai==1.35.13
+openai==1.35.15
     # via draive
 opentelemetry-api==1.25.0
     # via
@@ -211,7 +211,7 @@ pygments==2.18.0
     # via rich
 pyjwt==2.8.0
     # via chainlit
-pyright==1.1.371
+pyright==1.1.372
     # via chat (pyproject.toml)
 pystemmer==2.2.0.1
     # via fastembed
@@ -237,11 +237,11 @@ requests==2.32.3
     #   tiktoken
 rich==13.7.1
     # via bandit
-ruff==0.5.1
+ruff==0.5.3
     # via chat (pyproject.toml)
 sentencepiece==0.2.0
     # via draive
-setuptools==70.3.0
+setuptools==71.0.3
     # via opentelemetry-instrumentation
 simple-websocket==1.0.0
     # via python-engineio
@@ -261,7 +261,7 @@ starlette==0.37.2
     #   fastapi
 stevedore==5.2.0
     # via bandit
-sympy==1.13.0
+sympy==1.13.1
     # via onnxruntime
 syncer==2.0.3
     # via chainlit

@@ -24,13 +24,11 @@ from chainlit import (
 from draive import (
     LMM,
     AudioBase64Content,
-    AudioDataContent,
     AudioURLContent,
     ConversationMessage,
     ConversationMessageChunk,
     DataModel,
     ImageBase64Content,
-    ImageDataContent,
     ImageURLContent,
     MultimodalContent,
     ScopeDependencies,
@@ -40,7 +38,6 @@ from draive import (
     Tokenization,
     ToolStatus,
     VideoBase64Content,
-    VideoDataContent,
     VideoURLContent,
     VolatileAccumulativeMemory,
     ctx,
@@ -80,13 +77,13 @@ def prepare_profiles(user: Any) -> list[ChatProfile]:
 
     return [
         ChatProfile(
-            name="gpt-3.5-turbo",
-            markdown_description="**GPT-3.5**\nText only with tools",
+            name="gpt-4o-mini",
+            markdown_description="**GPT-4o-mini**\nMultimodal with tools",
             default=True,
         ),
         ChatProfile(
             name="gpt-4o",
-            markdown_description="**GPT-4**\nMultimodal with tools",
+            markdown_description="**GPT-4o**\nMultimodal with tools",
             default=False,
         ),
     ]
@@ -127,10 +124,11 @@ async def prepare() -> None:
     # select services based on current profile and form a base state for session
     config: OpenAIChatConfig
     match user_session.get("chat_profile"):  # pyright: ignore[reportUnknownMemberType]
-        case "gpt-3.5-turbo":
+        case "gpt-4o-mini":
             config = OpenAIChatConfig(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 temperature=0.75,
+                max_tokens=4096,
             )
 
         case "gpt-4o":
@@ -393,7 +391,7 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
     return MultimodalContent.of(*parts)
 
 
-def _as_message_content(  # noqa: C901
+def _as_message_content(
     content: MultimodalContent,
 ) -> list[Text | Image | Audio | Video | Component]:
     result: list[Text | Image | Audio | Video | Component] = []
@@ -408,26 +406,17 @@ def _as_message_content(  # noqa: C901
             case ImageBase64Content():
                 raise NotImplementedError("Base64 content is not supported yet")
 
-            case ImageDataContent():
-                raise NotImplementedError("Bytes content is not supported yet")
-
             case AudioURLContent() as audio_url:
                 result.append(Audio(url=audio_url.audio_url))
 
             case AudioBase64Content():
                 raise NotImplementedError("Base64 content is not supported yet")
 
-            case AudioDataContent():
-                raise NotImplementedError("Bytes content is not supported yet")
-
             case VideoURLContent() as video_url:
                 result.append(Video(url=video_url.video_url))
 
             case VideoBase64Content():
                 raise NotImplementedError("Base64 content is not supported yet")
-
-            case VideoDataContent():
-                raise NotImplementedError("Bytes content is not supported yet")
 
             case DataModel() as data:
                 result.append(Component(props=data.as_dict()))

@@ -77,6 +77,7 @@ class NetworkClient(ScopeDependency):
                 params=query,
                 allow_redirects=True,
             )
+
         except Exception as exc:
             raise WebsiteError("Network request failed") from exc
 
@@ -92,6 +93,7 @@ class NetworkClient(ScopeDependency):
                 "Website responded with invalid content type %s",
                 content_header,
             )
+
         try:
             return HTMLContent(
                 source=url,
@@ -117,6 +119,7 @@ class NetworkClient(ScopeDependency):
                 params=query,
                 allow_redirects=True,
             )
+
         except Exception as exc:
             raise WebsiteError("Network request failed") from exc
 
@@ -125,6 +128,7 @@ class NetworkClient(ScopeDependency):
                 "Website responded with invalid status code  %d",
                 response.status_code,
             )
+
         content_header: str = response.headers.get("content-type", "").lower()
         if "xml" not in content_header:
             raise WebsiteError(
@@ -165,12 +169,14 @@ class NetworkClient(ScopeDependency):
                 "Website responded with invalid status code  %d",
                 response.status_code,
             )
+
         content_header: str = response.headers.get("content-type", "").lower()
         if "pdf" not in content_header:
             raise WebsiteError(
                 "Website responded with invalid content type %s",
                 content_header,
             )
+
         try:
             return BytesIO(response.content)
 
@@ -194,6 +200,7 @@ class NetworkClient(ScopeDependency):
                 "Website responded with invalid status code  %d",
                 response.status_code,
             )
+
         parser.parse(response.text.splitlines())
 
         crawl_delay: float | None
