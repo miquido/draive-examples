@@ -10,6 +10,10 @@ Simple, locally running chat solution. Allows selecting from various LLM models 
 
 Example of agents workflow. Uses chat interface to provide a news page based on provided sources or topics.
 
+## Course
+
+Code from the [draive course](https://www.youtube.com/playlist?list=PLbS8Yksu3iAoRpDOGwP_UmK5s6B3SDz8T) split into separate folder for each video.
+
 ## License
 
 MIT License
