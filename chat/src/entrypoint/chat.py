@@ -107,7 +107,7 @@ def prepare_profiles(user: Any) -> list[ChatProfile]:
         ChatProfile(
             name="gpt-4o-mini",
             markdown_description="**GPT-4o-mini**\nMultimodal with tools",
-            default=False,
+            default=True,
         ),
         ChatProfile(
             name="gpt-4o",
@@ -117,7 +117,7 @@ def prepare_profiles(user: Any) -> list[ChatProfile]:
         ChatProfile(
             name="gemini-1.5-flash",
             markdown_description="**Gemini-Flash**\nMultimodal with tools",
-            default=True,
+            default=False,
         ),
         ChatProfile(
             name="claude-sonnet-3.5",
