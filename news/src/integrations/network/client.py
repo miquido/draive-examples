@@ -1,24 +1,23 @@
 from collections.abc import Mapping
 from functools import partial
 from http.cookiejar import CookieJar, DefaultCookiePolicy
-from io import BytesIO
 from typing import Self
 from urllib.parse import ParseResult, urlparse
 from urllib.robotparser import RobotFileParser
 
 from curl_cffi.requests import AsyncSession, Response  # pyright: ignore[reportMissingTypeStubs]
-from draive import ScopeDependency
 
-from integrations.network.config import WebsiteScrapperConfig
+from integrations.network.config import WebsiteScrappingConfig
 from integrations.network.content import HTMLContent, RSSContent
-from integrations.network.errors import WebsiteError
+from integrations.network.state import Network
+from integrations.network.types import NetworkError
 
 __all__ = [
     "NetworkClient",
 ]
 
 
-class NetworkClient(ScopeDependency):
+class NetworkClient:
     @classmethod
     def prepare(cls) -> Self:
         return cls()
@@ -34,10 +33,7 @@ class NetworkClient(ScopeDependency):
             max_clients=32,
         )
 
-    async def dispose(self) -> None:
-        await self._client.close()
-
-    async def request_headers(
+    async def scrap_headers(
         self,
         url: str,
         *,
@@ -52,22 +48,23 @@ class NetworkClient(ScopeDependency):
             )
 
         except Exception as exc:
-            raise WebsiteError("Network request failed") from exc
+            raise NetworkError("Network request failed") from exc
 
         if response.status_code not in range(200, 300):
-            raise WebsiteError(
+            raise NetworkError(
                 "Website responded with invalid status code  %d",
                 response.status_code,
             )
 
         return response.headers
 
-    async def request_html(
+    async def scrap_html(
         self,
         url: str,
         *,
         query: dict[str, str] | None = None,
         headers: dict[str, str] | None = None,
+        follow_redirects: bool | None = True,
     ) -> HTMLContent:
         try:
             response: Response = await self._client.request(  # pyright: ignore[reportUnknownMemberType]
@@ -75,21 +72,21 @@ class NetworkClient(ScopeDependency):
                 url=url,
                 headers={**{"accept": "text/html"}, **(headers or {})},
                 params=query,
-                allow_redirects=True,
+                allow_redirects=follow_redirects,
             )
 
         except Exception as exc:
-            raise WebsiteError("Network request failed") from exc
+            raise NetworkError("Network request failed") from exc
 
         if response.status_code not in range(200, 300):
-            raise WebsiteError(
+            raise NetworkError(
                 "Website responded with invalid status code  %d",
                 response.status_code,
             )
 
         content_header: str = response.headers.get("content-type", "").lower()
         if "html" not in content_header:
-            raise WebsiteError(
+            raise NetworkError(
                 "Website responded with invalid content type %s",
                 content_header,
             )
@@ -102,14 +99,15 @@ class NetworkClient(ScopeDependency):
             )
 
         except Exception as exc:
-            raise WebsiteError("Reading website content failed") from exc
+            raise NetworkError("Reading website content failed") from exc
 
-    async def request_rss(
+    async def scrap_rss(
         self,
         url: str,
         *,
         query: dict[str, str] | None = None,
         headers: dict[str, str] | None = None,
+        follow_redirects: bool | None = True,
     ) -> RSSContent:
         try:
             response: Response = await self._client.request(  # pyright: ignore[reportUnknownMemberType]
@@ -117,21 +115,21 @@ class NetworkClient(ScopeDependency):
                 url=url,
                 headers={**{"accept": "application/xml"}, **(headers or {})},
                 params=query,
-                allow_redirects=True,
+                allow_redirects=follow_redirects,
             )
 
         except Exception as exc:
-            raise WebsiteError("Network request failed") from exc
+            raise NetworkError("Network request failed") from exc
 
         if response.status_code not in range(200, 300):
-            raise WebsiteError(
+            raise NetworkError(
                 "Website responded with invalid status code  %d",
                 response.status_code,
             )
 
         content_header: str = response.headers.get("content-type", "").lower()
         if "xml" not in content_header:
-            raise WebsiteError(
+            raise NetworkError(
                 "Website responded with invalid content type %s",
                 content_header,
             )
@@ -143,51 +141,13 @@ class NetworkClient(ScopeDependency):
             )
 
         except Exception as exc:
-            raise WebsiteError("Reading website rss failed") from exc
+            raise NetworkError("Reading website rss failed") from exc
 
-    async def request_pdf(
-        self,
-        url: str,
-        *,
-        query: dict[str, str] | None = None,
-        headers: dict[str, str] | None = None,
-    ) -> BytesIO:
-        try:
-            response: Response = await self._client.request(  # pyright: ignore[reportUnknownMemberType]
-                method="GET",
-                url=url,
-                headers={**{"accept": "application/pdf"}, **(headers or {})},
-                params=query,
-                allow_redirects=True,
-            )
-
-        except Exception as exc:
-            raise WebsiteError("Network request failed") from exc
-
-        if response.status_code not in range(200, 300):
-            raise WebsiteError(
-                "Website responded with invalid status code  %d",
-                response.status_code,
-            )
-
-        content_header: str = response.headers.get("content-type", "").lower()
-        if "pdf" not in content_header:
-            raise WebsiteError(
-                "Website responded with invalid content type %s",
-                content_header,
-            )
-
-        try:
-            return BytesIO(response.content)
-
-        except Exception as exc:
-            raise WebsiteError("Reading pdf content failed") from exc
-
-    async def scrapper_config(
+    async def scrapping_config(
         self,
         website: str,
         /,
-    ) -> WebsiteScrapperConfig:
+    ) -> WebsiteScrappingConfig:
         website_url: ParseResult = urlparse(website)
 
         parser: RobotFileParser = RobotFileParser()
@@ -196,7 +156,7 @@ class NetworkClient(ScopeDependency):
             url=f"{website_url.scheme}://{website_url.netloc}/robots.txt",
         )
         if response.status_code not in range(200, 300):
-            raise WebsiteError(
+            raise NetworkError(
                 "Website responded with invalid status code  %d",
                 response.status_code,
             )
@@ -211,8 +171,19 @@ class NetworkClient(ScopeDependency):
         else:
             crawl_delay = None
 
-        return WebsiteScrapperConfig(
+        return WebsiteScrappingConfig(
             website=f"{website_url.scheme}://{website_url.netloc}",
             scrap_delay=crawl_delay,
             can_scrap=partial(parser.can_fetch, "*"),
         )
+
+    async def initialize(self) -> Network:
+        return Network(
+            scrap_html=self.scrap_html,
+            scrap_rss=self.scrap_rss,
+            scrap_headers=self.scrap_headers,
+            scrapping_config=self.scrapping_config,
+        )
+
+    async def dispose(self) -> None:
+        await self._client.close()
