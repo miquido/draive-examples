@@ -1,14 +1,13 @@
 from draive import (
     ConversationMessage,
-    ConversationResponseStream,
     Memory,
     MultimodalContent,
     Toolbox,
     conversation_completion,
 )
-from solutions.time import utc_datetime
 
 from features.news import prepare_news
+from solutions.time import utc_datetime
 
 __all__ = [
     "chat_respond",
@@ -32,7 +31,7 @@ working further as your job is done.
 async def chat_respond(
     memory: Memory[list[ConversationMessage], ConversationMessage],
     message: MultimodalContent,
-) -> ConversationResponseStream:
+) -> ConversationMessage:
     """
     Respond to chat conversation message using provided memory and instruction.
     """
@@ -42,5 +41,4 @@ async def chat_respond(
         input=message,
         memory=memory,
         tools=Toolbox(prepare_news, utc_datetime),
-        stream=True,
     )

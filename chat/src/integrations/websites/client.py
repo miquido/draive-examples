@@ -5,18 +5,18 @@ from urllib.parse import ParseResult, urlparse
 from urllib.robotparser import RobotFileParser
 
 from curl_cffi.requests import AsyncSession, Response  # pyright: ignore[reportMissingTypeStubs]
-from draive import ScopeDependency
 
-from integrations.websites.config import WebsiteScrapperConfig
+from integrations.websites.config import WebsiteScrappingConfig
 from integrations.websites.content import HTMLContent
-from integrations.websites.errors import WebsiteError
+from integrations.websites.state import Websites
+from integrations.websites.types import WebsiteError
 
 __all__ = [
     "WebsiteClient",
 ]
 
 
-class WebsiteClient(ScopeDependency):
+class WebsiteClient:
     @classmethod
     def prepare(cls) -> Self:
         return cls()
@@ -33,10 +33,7 @@ class WebsiteClient(ScopeDependency):
             max_clients=32,
         )
 
-    async def dispose(self) -> None:
-        await self._client.close()
-
-    async def request(
+    async def scrap(
         self,
         website: str,
         *,
@@ -52,6 +49,7 @@ class WebsiteClient(ScopeDependency):
                 params=query,
                 allow_redirects=follow_redirects,
             )
+
         except Exception as exc:
             raise WebsiteError("Network request failed") from exc
 
@@ -60,26 +58,29 @@ class WebsiteClient(ScopeDependency):
                 "Website responded with invalid status code  %d",
                 response.status_code,
             )
+
         content_header: str = response.headers.get("content-type", "").lower()
         if "html" not in content_header:
             raise WebsiteError(
                 "Website responded with invalid content type %s",
                 content_header,
             )
+
         try:
             return HTMLContent(
                 source=website,
                 raw_content=response.content,
                 encoding=response.encoding,
             )
+
         except Exception as exc:
             raise WebsiteError("Reading website content failed") from exc
 
-    async def scrapper_config(
+    async def scrapping_config(
         self,
         website: str,
         /,
-    ) -> WebsiteScrapperConfig:
+    ) -> WebsiteScrappingConfig:
         website_url: ParseResult = urlparse(website)
 
         parser: RobotFileParser = RobotFileParser()
@@ -92,6 +93,7 @@ class WebsiteClient(ScopeDependency):
                 "Website responded with invalid status code  %d",
                 response.status_code,
             )
+
         parser.parse(response.text.splitlines())
 
         crawl_delay: float | None
@@ -102,7 +104,16 @@ class WebsiteClient(ScopeDependency):
         else:
             crawl_delay = None
 
-        return WebsiteScrapperConfig(
+        return WebsiteScrappingConfig(
             scrap_delay=crawl_delay,
             can_scrap=partial(parser.can_fetch, "*"),
         )
+
+    async def initialize(self) -> Websites:
+        return Websites(
+            scrap=self.scrap,
+            scrapping_config=self.scrapping_config,
+        )
+
+    async def dispose(self) -> None:
+        await self._client.close()

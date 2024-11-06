@@ -4,9 +4,9 @@ aiofiles==23.2.1
     # via chainlit
 annotated-types==0.7.0
     # via pydantic
-anthropic==0.29.2
+anthropic==0.37.1
     # via draive
-anyio==3.7.1
+anyio==4.6.2.post1
     # via
     #   anthropic
     #   asyncer
@@ -14,27 +14,27 @@ anyio==3.7.1
     #   openai
     #   starlette
     #   watchfiles
-asyncer==0.0.2
+asyncer==0.0.7
     # via chainlit
-bandit==1.7.9
+bandit==1.7.10
     # via chat (pyproject.toml)
 beautifulsoup4==4.12.3
     # via chat (pyproject.toml)
 bidict==0.23.1
     # via python-socketio
-certifi==2024.7.4
+certifi==2024.8.30
     # via
     #   curl-cffi
     #   httpcore
     #   httpx
     #   requests
-cffi==1.16.0
+cffi==1.17.1
     # via
     #   cryptography
     #   curl-cffi
-chainlit==1.1.401
+chainlit==1.3.1
     # via chat (pyproject.toml)
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
     # via
     #   pdfminer-six
     #   requests
@@ -46,11 +46,11 @@ click==8.1.7
     #   uvicorn
 coloredlogs==15.0.1
     # via onnxruntime
-cryptography==43.0.0
+cryptography==43.0.3
     # via pdfminer-six
 curl-cffi==0.6.4
     # via chat (pyproject.toml)
-dataclasses-json==0.5.14
+dataclasses-json==0.6.7
     # via chainlit
 deprecated==1.2.14
     # via
@@ -62,64 +62,68 @@ distro==1.9.0
     # via
     #   anthropic
     #   openai
-draive==0.23.0
+draive==0.30.0
     # via chat (pyproject.toml)
-fastapi==0.110.3
+fastapi==0.112.4
     # via chainlit
-fastembed==0.3.4
+fastembed==0.3.6
     # via draive
-filelock==3.15.4
+filelock==3.16.1
     # via huggingface-hub
 filetype==1.2.0
     # via chainlit
 flatbuffers==24.3.25
     # via onnxruntime
-fsspec==2024.6.1
+fsspec==2024.10.0
     # via huggingface-hub
-googleapis-common-protos==1.63.2
+googleapis-common-protos==1.65.0
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-grpcio==1.65.4
+grpcio==1.67.1
     # via opentelemetry-exporter-otlp-proto-grpc
 h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
     #   wsproto
-httpcore==1.0.5
+haiway==0.4.0
+    # via draive
+httpcore==1.0.6
     # via httpx
-httpx==0.27.0
+httpx==0.27.2
     # via
     #   anthropic
     #   chainlit
     #   draive
     #   literalai
     #   openai
-huggingface-hub==0.24.5
+huggingface-hub==0.26.2
     # via
     #   fastembed
     #   tokenizers
 humanfriendly==10.0
     # via coloredlogs
-idna==3.7
+idna==3.10
     # via
     #   anyio
     #   httpx
     #   requests
-importlib-metadata==8.0.0
+importlib-metadata==8.5.0
     # via opentelemetry-api
-jiter==0.5.0
-    # via anthropic
+jiter==0.7.0
+    # via
+    #   anthropic
+    #   openai
 lazify==0.4.0
     # via chainlit
-literalai==0.0.607
+literalai==0.0.623
     # via chainlit
 loguru==0.7.2
     # via fastembed
 markdown-it-py==3.0.0
     # via rich
-marshmallow==3.21.3
+marshmallow==3.23.1
     # via dataclasses-json
 mdurl==0.1.2
     # via markdown-it-py
@@ -140,13 +144,13 @@ numpy==1.26.4
     #   fastembed
     #   onnx
     #   onnxruntime
-onnx==1.16.2
+onnx==1.17.0
     # via fastembed
-onnxruntime==1.18.1
+onnxruntime==1.20.0
     # via fastembed
-openai==1.39.0
+openai==1.54.1
     # via draive
-opentelemetry-api==1.26.0
+opentelemetry-api==1.28.0
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
@@ -154,30 +158,32 @@ opentelemetry-api==1.26.0
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
     #   uptrace
-opentelemetry-exporter-otlp==1.26.0
+opentelemetry-exporter-otlp==1.28.0
     # via uptrace
-opentelemetry-exporter-otlp-proto-common==1.26.0
+opentelemetry-exporter-otlp-proto-common==1.28.0
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-exporter-otlp-proto-grpc==1.26.0
+opentelemetry-exporter-otlp-proto-grpc==1.28.0
     # via opentelemetry-exporter-otlp
-opentelemetry-exporter-otlp-proto-http==1.26.0
+opentelemetry-exporter-otlp-proto-http==1.28.0
     # via opentelemetry-exporter-otlp
-opentelemetry-instrumentation==0.47b0
+opentelemetry-instrumentation==0.49b0
     # via uptrace
-opentelemetry-proto==1.26.0
+opentelemetry-proto==1.28.0
     # via
     #   opentelemetry-exporter-otlp-proto-common
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-sdk==1.26.0
+opentelemetry-sdk==1.28.0
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
     #   uptrace
-opentelemetry-semantic-conventions==0.47b0
-    # via opentelemetry-sdk
+opentelemetry-semantic-conventions==0.49b0
+    # via
+    #   opentelemetry-instrumentation
+    #   opentelemetry-sdk
 packaging==23.2
     # via
     #   chainlit
@@ -185,13 +191,14 @@ packaging==23.2
     #   literalai
     #   marshmallow
     #   onnxruntime
-pbr==6.0.0
+    #   opentelemetry-instrumentation
+pbr==6.1.0
     # via stevedore
 pdfminer-six==20231228
     # via chat (pyproject.toml)
 pillow==10.4.0
     # via fastembed
-protobuf==4.25.4
+protobuf==5.28.3
     # via
     #   googleapis-common-protos
     #   onnx
@@ -199,36 +206,36 @@ protobuf==4.25.4
     #   opentelemetry-proto
 pycparser==2.22
     # via cffi
-pydantic==2.8.2
+pydantic==2.9.2
     # via
     #   anthropic
     #   chainlit
     #   fastapi
     #   literalai
     #   openai
-pydantic-core==2.20.1
+pydantic-core==2.23.4
     # via pydantic
 pygments==2.18.0
     # via rich
 pyjwt==2.9.0
     # via chainlit
-pyright==1.1.374
+pyright==1.1.388
     # via chat (pyproject.toml)
-pystemmer==2.2.0.1
+pystemmer==2.2.0.3
     # via fastembed
 python-dotenv==1.0.1
     # via chainlit
-python-engineio==4.9.1
+python-engineio==4.10.1
     # via python-socketio
 python-multipart==0.0.9
     # via chainlit
-python-socketio==5.11.3
+python-socketio==5.11.4
     # via chainlit
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via
     #   bandit
     #   huggingface-hub
-regex==2024.7.24
+regex==2024.9.11
     # via tiktoken
 requests==2.32.3
     # via
@@ -236,15 +243,13 @@ requests==2.32.3
     #   huggingface-hub
     #   opentelemetry-exporter-otlp-proto-http
     #   tiktoken
-rich==13.7.1
+rich==13.9.4
     # via bandit
-ruff==0.5.6
+ruff==0.7.2
     # via chat (pyproject.toml)
 sentencepiece==0.2.0
     # via draive
-setuptools==72.1.0
-    # via opentelemetry-instrumentation
-simple-websocket==1.0.0
+simple-websocket==1.1.0
     # via python-engineio
 sniffio==1.3.1
     # via
@@ -254,27 +259,27 @@ sniffio==1.3.1
     #   openai
 snowballstemmer==2.2.0
     # via fastembed
-soupsieve==2.5
+soupsieve==2.6
     # via beautifulsoup4
 starlette==0.37.2
     # via
     #   chainlit
     #   fastapi
-stevedore==5.2.0
+stevedore==5.3.0
     # via bandit
-sympy==1.13.1
+sympy==1.13.3
     # via onnxruntime
 syncer==2.0.3
     # via chainlit
-tiktoken==0.7.0
+tiktoken==0.8.0
     # via draive
-tokenizers==0.19.1
+tokenizers==0.20.3
     # via
     #   anthropic
     #   fastembed
-tomli==2.0.1
+tomli==2.0.2
     # via chainlit
-tqdm==4.66.5
+tqdm==4.66.6
     # via
     #   fastembed
     #   huggingface-hub
@@ -288,12 +293,13 @@ typing-extensions==4.12.2
     #   opentelemetry-sdk
     #   pydantic
     #   pydantic-core
+    #   pyright
     #   typing-inspect
 typing-inspect==0.9.0
     # via dataclasses-json
-uptrace==1.26.0
+uptrace==1.27.0
     # via chainlit
-urllib3==2.2.2
+urllib3==2.2.3
     # via requests
 uvicorn==0.25.0
     # via chainlit
@@ -305,5 +311,5 @@ wrapt==1.16.0
     #   opentelemetry-instrumentation
 wsproto==1.2.0
     # via simple-websocket
-zipp==3.19.2
+zipp==3.20.2
     # via importlib-metadata

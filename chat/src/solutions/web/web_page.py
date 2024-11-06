@@ -3,16 +3,16 @@ from collections.abc import Sequence
 
 from draive import (
     Argument,
-    auto_retry,
     count_text_tokens,
     ctx,
     generate_text,
+    retry,
     split_sequence,
     split_text,
     tool,
 )
-from integrations.websites import WebsiteClient
-from integrations.websites.content import HTMLContent
+
+from integrations.websites import HTMLContent, Websites
 
 __all__ = [
     "web_page_content",
@@ -34,7 +34,7 @@ async def web_page_content(
     When topic is provided it searches for the information in that topic.
     Otherwise general summary is provided.
     """
-    page_content: HTMLContent = await ctx.dependency(WebsiteClient).request(website=url)
+    page_content: HTMLContent = await ctx.state(Websites).scrap(website=url)
 
     return await _web_page_content(
         topic=topic or "General summary",
@@ -84,7 +84,7 @@ TEXT:
 """
 
 
-@auto_retry(limit=2, delay=lambda attempt: attempt * 0.16)
+@retry(limit=2, delay=lambda attempt, _: attempt * 0.16)
 async def _prepare(
     topic: str,
     text: str,
@@ -117,7 +117,7 @@ TEXTS:
 """
 
 
-@auto_retry(limit=2, delay=lambda attempt: attempt * 0.16)
+@retry(limit=2, delay=lambda attempt, _: attempt * 0.16)
 async def _merge(
     topic: str,
     texts: Sequence[str],

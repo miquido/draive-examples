@@ -1,6 +1,7 @@
 from asyncio import get_running_loop
 from base64 import b64encode
-from typing import Any, Final, Literal, cast
+from collections.abc import AsyncIterator
+from typing import Any, Literal, cast
 
 from chainlit import (
     Audio,
@@ -13,7 +14,6 @@ from chainlit import (
     Message,
     Pdf,
     Starter,
-    Step,
     Text,
     Video,
     on_chat_start,  # type: ignore
@@ -25,21 +25,16 @@ from chainlit import (
 )
 from chainlit.input_widget import TextInput
 from draive import (
-    LMM,
     AudioBase64Content,
     AudioURLContent,
     ConversationMessage,
-    ConversationMessageChunk,
     DataModel,
     ImageBase64Content,
     ImageURLContent,
+    LMMStreamChunk,
     MultimodalContent,
-    ScopeDependencies,
-    ScopeState,
+    State,
     TextContent,
-    TextEmbedding,
-    Tokenization,
-    ToolStatus,
     VideoBase64Content,
     VideoURLContent,
     VolatileAccumulativeMemory,
@@ -49,27 +44,26 @@ from draive import (
     setup_logging,
 )
 from draive.anthropic import (
-    AnthropicClient,
     AnthropicConfig,
-    anthropic_lmm_invocation,
-    anthropic_tokenize_text,
+    anthropic_lmm,
+    anthropic_tokenizer,
 )
-from draive.fastembed import FastembedTextConfig, fastembed_text_embedding
+from draive.fastembed import fastembed_text_embedding
 from draive.gemini import (
-    GeminiClient,
     GeminiConfig,
-    gemini_embed_text,
-    gemini_lmm_invocation,
-    gemini_tokenize_text,
+    gemini_lmm,
+    gemini_text_embedding,
+    gemini_tokenizer,
 )
-from draive.ollama import OllamaChatConfig, OllamaClient, ollama_lmm_invocation
+from draive.ollama import OllamaChatConfig, ollama_lmm
 from draive.openai import (
     OpenAIChatConfig,
-    OpenAIClient,
-    openai_embed_text,
-    openai_lmm_invocation,
-    openai_tokenize_text,
+    openai_lmm,
+    openai_streaming_lmm,
+    openai_text_embedding,
+    openai_tokenizer,
 )
+
 from features.chat import chat_respond
 from features.knowledge import index_pdf
 from integrations.websites import WebsiteClient
@@ -85,20 +79,9 @@ You can access conversation documents by using "search" tool when user refers to
 Prefer getting knowledge from those if able.
 """
 
-# define dependencies globally - it will be reused for all chats
-# regardless of selected service selection
-# those are definitions of external services access methods
-dependencies: Final[ScopeDependencies] = ScopeDependencies(
-    OpenAIClient,
-    AnthropicClient,
-    GeminiClient,
-    OllamaClient,
-    WebsiteClient,
-)
-
 
 @set_chat_profiles
-def prepare_profiles(user: Any) -> list[ChatProfile]:
+async def prepare_profiles(user: Any) -> list[ChatProfile]:
     """
     Prepare chat profiles allowing to select service providers
     """
@@ -133,7 +116,7 @@ def prepare_profiles(user: Any) -> list[ChatProfile]:
 
 
 @set_starters
-def prepare_starters(user: Any) -> list[Starter]:
+async def prepare_starters(user: Any) -> list[Starter]:
     """
     List of starter messages for the chat, can be used for a common task shortcuts
     or as a showcase of the implemented features.
@@ -166,16 +149,22 @@ async def prepare() -> None:
         VolatileAccumulativeMemory[ConversationMessage]([], limit=8),
     )
     # select services based on current profile and form a base state for session
-    state: ScopeState = ScopeState(
-        VolatileVectorIndex(),  # it will be used as a knowledge base
-    )
+    state: list[State] = [
+        VolatileVectorIndex(storage={}),  # it will be used as a knowledge base
+        await WebsiteClient.prepare().initialize(),
+    ]
     match user_session.get("chat_profile"):  # pyright: ignore[reportUnknownMemberType]
         case "gpt-4o-mini":
-            state = state.updated(
+            user_session.set(  # pyright: ignore[reportUnknownMemberType]
+                "streaming",
+                True,
+            )
+            state.extend(
                 [
-                    LMM(invocation=openai_lmm_invocation),
-                    Tokenization(tokenize_text=openai_tokenize_text),
-                    TextEmbedding(embed=openai_embed_text),
+                    openai_lmm(),
+                    openai_streaming_lmm(),
+                    openai_tokenizer("gpt-4o-mini"),
+                    openai_text_embedding(),
                     OpenAIChatConfig(
                         model="gpt-4o-mini",
                         temperature=DEFAULT_TEMPERATURE,
@@ -184,11 +173,16 @@ async def prepare() -> None:
             )
 
         case "gpt-4o":
-            state = state.updated(
+            user_session.set(  # pyright: ignore[reportUnknownMemberType]
+                "streaming",
+                True,
+            )
+            state.extend(
                 [
-                    LMM(invocation=openai_lmm_invocation),
-                    Tokenization(tokenize_text=openai_tokenize_text),
-                    TextEmbedding(embed=openai_embed_text),
+                    openai_lmm(),
+                    openai_streaming_lmm(),
+                    openai_tokenizer("gpt-4o"),
+                    openai_text_embedding(),
                     OpenAIChatConfig(
                         model="gpt-4o",
                         temperature=DEFAULT_TEMPERATURE,
@@ -197,15 +191,18 @@ async def prepare() -> None:
             )
 
         case "llama3:8B":
-            state = state.updated(
+            user_session.set(  # pyright: ignore[reportUnknownMemberType]
+                "streaming",
+                False,
+            )
+            state.extend(
                 [
-                    LMM(invocation=ollama_lmm_invocation),
+                    ollama_lmm(),
                     # TODO: use actual llama tokenizer
-                    OpenAIChatConfig(),  # using OpenAI config to select tokenizer
-                    Tokenization(tokenize_text=openai_tokenize_text),
+                    # using OpenAI config to select tokenizer
+                    openai_tokenizer("gpt-4o-mini"),
                     # use locally running embedding
-                    FastembedTextConfig(model="nomic-ai/nomic-embed-text-v1.5"),
-                    TextEmbedding(embed=fastembed_text_embedding),
+                    await fastembed_text_embedding("nomic-ai/nomic-embed-text-v1.5"),
                     OllamaChatConfig(
                         model="llama3:8B",
                         temperature=DEFAULT_TEMPERATURE,
@@ -214,11 +211,15 @@ async def prepare() -> None:
             )
 
         case "gemini-1.5-flash":
-            state = state.updated(
+            user_session.set(  # pyright: ignore[reportUnknownMemberType]
+                "streaming",
+                False,
+            )
+            state.extend(
                 [
-                    LMM(invocation=gemini_lmm_invocation),
-                    Tokenization(tokenize_text=gemini_tokenize_text),
-                    TextEmbedding(embed=gemini_embed_text),
+                    gemini_lmm(),
+                    gemini_tokenizer("gemini-1.5-flash"),
+                    gemini_text_embedding(),
                     GeminiConfig(
                         model="gemini-1.5-flash",
                         temperature=DEFAULT_TEMPERATURE,
@@ -227,13 +228,16 @@ async def prepare() -> None:
             )
 
         case "claude-sonnet-3.5":
-            state = state.updated(
+            user_session.set(  # pyright: ignore[reportUnknownMemberType]
+                "streaming",
+                False,
+            )
+            state.extend(
                 [
-                    LMM(invocation=anthropic_lmm_invocation),
-                    Tokenization(tokenize_text=anthropic_tokenize_text),
+                    anthropic_lmm(),
+                    anthropic_tokenizer(),
                     # use locally running embedding
-                    FastembedTextConfig(model="nomic-ai/nomic-embed-text-v1.5"),
-                    TextEmbedding(embed=fastembed_text_embedding),
+                    await fastembed_text_embedding("nomic-ai/nomic-embed-text-v1.5"),
                     AnthropicConfig(
                         model="claude-3-5-sonnet-20240620",
                         temperature=DEFAULT_TEMPERATURE,
@@ -278,7 +282,7 @@ async def update_settings(settings: dict[str, Any]) -> None:
 
 
 @on_message
-async def message(  # noqa: C901, PLR0912
+async def message(
     message: Message,
 ) -> None:
     """
@@ -287,85 +291,67 @@ async def message(  # noqa: C901, PLR0912
 
     # enter a new context for processing each message
     # using session state and shared dependencies
-    async with ctx.new(
+    async with ctx.scope(
         "chat",
-        state=user_session.get("state"),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
-        dependencies=dependencies,
+        *user_session.get("state", []),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType, reportArgumentType]
     ):
-        response_message: Message = Message(author="assistant", content="")
-        await response_message.send()  # prepare message for streaming
-        try:
-            # request a chat conversation completion stream
-            response_stream = await chat_respond(
-                instruction=user_session.get("system_prompt", DEFAULT_PROMPT),  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
-                # convert message from chainlit to draive
-                message=await _as_multimodal_content(
-                    content=message.content,
-                    elements=message.elements,  # pyright: ignore[reportArgumentType]
-                ),
-                memory=user_session.get("chat_memory"),  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
-            )
+        if user_session.get("streaming", False):  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
+            response_message: Message = Message(author="assistant", content="")
+            await response_message.send()  # prepare message for streaming
+            try:
+                # request a chat conversation completion stream
+                response_stream: AsyncIterator[LMMStreamChunk] = await chat_respond(  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
+                    instruction=user_session.get("system_prompt", DEFAULT_PROMPT),  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
+                    # convert message from chainlit to draive
+                    message=await _as_multimodal_content(
+                        content=message.content,
+                        elements=message.elements,  # pyright: ignore[reportArgumentType]
+                    ),
+                    memory=user_session.get("chat_memory"),  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
+                    stream=True,
+                )
 
-            # track tools execution to show progress items
-            tool_steps: dict[str, Step] = {}
-            async for part in response_stream:
-                match part:  # consume each incoming stream part
-                    case ConversationMessageChunk() as chunk:
-                        for element in _as_message_content(chunk.content):
-                            match element:
-                                case Text() as text:
-                                    # for a text message part simply add it to the UI
-                                    # this might not be fully accurate but chainlit seems to
-                                    # not support it any other way (except custom implementation)
-                                    await response_message.stream_token(str(text.content))
+                async for chunk in response_stream:  # pyright: ignore[reportUnknownVariableType]
+                    for element in _as_message_content(chunk.content):  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+                        match element:
+                            case Text() as text:
+                                # for a text message part simply add it to the UI
+                                # this might not be fully accurate but chainlit seems to
+                                # not support it any other way (except custom implementation)
+                                await response_message.stream_token(str(text.content))
 
-                                case other:
-                                    # for a media add it separately
-                                    response_message.elements.append(other)  # pyright: ignore[reportArgumentType]
-                                    await response_message.update()
+                            case other:
+                                # for a media add it separately
+                                response_message.elements.append(other)  # pyright: ignore[reportArgumentType]
+                                await response_message.update()
 
-                    case ToolStatus() as tool_status:
-                        ctx.log_debug("Received tool status: %s", tool_status)
-                        # for a tool status add or update its progress indicator
-                        step: Step
-                        if current_step := tool_steps.get(tool_status.identifier):
-                            step = current_step
+            except Exception as exc:
+                ctx.log_error("Conversation failed", exception=exc)
+                # replace the message with the error message as the result
+                # not the best error handling but still handling
+                await response_message.remove()
+                await ErrorMessage(content=str(exc)).send()
 
-                        else:
-                            step: Step = Step(
-                                id=tool_status.identifier,
-                                name=tool_status.tool,
-                                type="tool",
-                            )
-                            tool_steps[tool_status.identifier] = step
-
-                            match tool_status.status:
-                                case "STARTED":
-                                    await step.send()
-
-                                case "PROGRESS":
-                                    if content := tool_status.content:
-                                        # stream tool update status if provided
-                                        await step.stream_token(str(content))
-
-                                case "FINISHED":
-                                    # finalize the status
-                                    await step.update()
-
-                                case "FAILED":
-                                    # finalize indicating an error
-                                    step.output = "ERROR"
-                                    await step.update()
-
-        except Exception as exc:
-            ctx.log_error("Conversation failed", exception=exc)
-            # replace the message with the error message as the result
-            # not the best error handling but still handling
-            await response_message.remove()
-            await ErrorMessage(content=str(exc)).send()
+            else:
+                await response_message.update()  # finalize the message
 
         else:
-            await response_message.update()  # finalize the message
+            try:
+                response = await chat_respond(
+                    instruction=user_session.get("system_prompt", DEFAULT_PROMPT),  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
+                    # convert message from chainlit to draive
+                    message=await _as_multimodal_content(
+                        content=message.content,
+                        elements=message.elements,  # pyright: ignore[reportArgumentType]
+                    ),
+                    memory=user_session.get("chat_memory"),  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
+                )
+
+                await Message(author="assistant", content=response.content.as_string()).send()
+
+            except Exception as exc:
+                ctx.log_error("Conversation failed", exception=exc)
+                await ErrorMessage(content=str(exc)).send()
 
 
 # helper method for loading data from file
@@ -522,7 +508,7 @@ def _as_message_content(
     for part in content.parts:
         match part:
             case TextContent() as text:
-                result.append(Text(content=text.text))
+                result.append(Text(content=text.text)) if text.text else None
 
             case ImageURLContent() as image_url:
                 result.append(Image(url=image_url.image_url))

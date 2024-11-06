@@ -3,7 +3,8 @@ from collections.abc import Mapping
 from urllib.parse import ParseResult, urlparse
 
 from draive import Argument, ctx, frozenlist, tool
-from integrations.network import NetworkClient, RSSArticle, RSSContent, WebsiteScrapperConfig
+
+from integrations.network import Network, RSSArticle, RSSContent, WebsiteScrappingConfig
 
 __all__ = [
     "read_rss",
@@ -25,12 +26,12 @@ async def read_rss(  # noqa: PLR0912
     limit: int = Argument(description="Limit of articles to receive", default=16),
 ) -> list[RSSArticle]:
     ctx.log_debug("Requested RSS for %s", url)
-    client: NetworkClient = ctx.dependency(NetworkClient)
+    client: Network = ctx.state(Network)
     rss_url: str
     # check provided url content
     headers: Mapping[str, str]
     try:
-        headers = await client.request_headers(url=url)
+        headers = await client.scrap_headers(url=url)
 
     except Exception:
         headers = {}
@@ -45,7 +46,7 @@ async def read_rss(  # noqa: PLR0912
         for path in COMMON_RSS_PATHS:
             candidate_url: str = base_url + path
             try:
-                headers = await client.request_headers(url=candidate_url)
+                headers = await client.scrap_headers(url=candidate_url)
 
             except Exception:
                 continue
@@ -62,7 +63,7 @@ async def read_rss(  # noqa: PLR0912
             return []
 
     # get the rss feed
-    content: RSSContent = await client.request_rss(url=rss_url)
+    content: RSSContent = await client.scrap_rss(url=rss_url)
     # get the most recent on top
     sorted_articles: list[RSSArticle] = sorted(
         content.articles,
@@ -71,19 +72,19 @@ async def read_rss(  # noqa: PLR0912
 
     # look for articles allowed for robots
     selected_articles: list[RSSArticle] = []
-    scrapper_configs: dict[str, WebsiteScrapperConfig] = {}
+    scrapper_configs: dict[str, WebsiteScrappingConfig] = {}
     for article in sorted_articles:
         parsed_url: ParseResult = urlparse(article.link)
         website: str = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-        config: WebsiteScrapperConfig
+        config: WebsiteScrappingConfig
         if current := scrapper_configs.get(website):
             config = current
 
             if delay := config.scrap_delay:
                 await sleep(delay)
         else:
-            config = await client.scrapper_config(article.link)
+            config = await client.scrapping_config(article.link)
             scrapper_configs[website] = config
 
         # we should respect robots.txt however for example purposes
