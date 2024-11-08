@@ -9,10 +9,10 @@ from draive import (
     frozenlist,
     generate_model,
 )
-from solutions.news import explore_news
-from solutions.rss import read_rss
 
 from features.news.state import NewsArticleSource
+from solutions.news import explore_news
+from solutions.rss import read_rss
 
 INSTRUCTION: str = """\
 Your task is to find articles based on provided topic and guidelines.

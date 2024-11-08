@@ -6,9 +6,9 @@ from draive import (
     ctx,
     generate_text,
 )
-from solutions.website import read_website
 
 from features.news.state import NewsArticleScratchpad, NewsArticleSource
+from solutions.website import read_website
 
 INSTRUCTION: str = """\
 You are an AI assistant responsible for reading news articles and creating a detailed summary. \

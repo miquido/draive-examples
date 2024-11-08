@@ -6,9 +6,9 @@ from draive import (
     ctx,
     split_text,
 )
-from integrations.pdf import read_pdf
 
 from features.knowledge.model import KnowledgeItem
+from integrations.pdf import read_pdf
 
 __all__ = [
     "index_pdf",

@@ -32,7 +32,7 @@ cffi==1.17.1
     # via
     #   cryptography
     #   curl-cffi
-chainlit==1.3.1
+chainlit==1.3.2
     # via chat (pyproject.toml)
 charset-normalizer==3.4.0
     # via
@@ -62,9 +62,9 @@ distro==1.9.0
     # via
     #   anthropic
     #   openai
-draive==0.30.0
+draive==0.30.1
     # via chat (pyproject.toml)
-fastapi==0.112.4
+fastapi==0.115.4
     # via chainlit
 fastembed==0.3.6
     # via draive
@@ -148,7 +148,7 @@ onnx==1.17.0
     # via fastembed
 onnxruntime==1.20.0
     # via fastembed
-openai==1.54.1
+openai==1.54.3
     # via draive
 opentelemetry-api==1.28.0
     # via
@@ -235,7 +235,7 @@ pyyaml==6.0.2
     # via
     #   bandit
     #   huggingface-hub
-regex==2024.9.11
+regex==2024.11.6
     # via tiktoken
 requests==2.32.3
     # via
@@ -261,7 +261,7 @@ snowballstemmer==2.2.0
     # via fastembed
 soupsieve==2.6
     # via beautifulsoup4
-starlette==0.37.2
+starlette==0.41.2
     # via
     #   chainlit
     #   fastapi
@@ -279,7 +279,7 @@ tokenizers==0.20.3
     #   fastembed
 tomli==2.0.2
     # via chainlit
-tqdm==4.66.6
+tqdm==4.67.0
     # via
     #   fastembed
     #   huggingface-hub

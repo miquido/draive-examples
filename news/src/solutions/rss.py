@@ -49,7 +49,7 @@ async def read_rss(  # noqa: PLR0912
                 headers = await client.scrap_headers(url=candidate_url)
 
             except Exception:
-                continue
+                continue  # nosec: B112
 
             if "xml" in headers.get("content-type", "").lower():
                 rss_url = candidate_url
