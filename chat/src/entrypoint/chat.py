@@ -1,7 +1,7 @@
 from asyncio import get_running_loop
 from base64 import b64encode
 from collections.abc import AsyncIterator
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 from chainlit import (
     Audio,
@@ -25,23 +25,19 @@ from chainlit import (
 )
 from chainlit.input_widget import TextInput
 from draive import (
-    AudioBase64Content,
-    AudioURLContent,
     ConversationMessage,
     DataModel,
-    ImageBase64Content,
-    ImageURLContent,
     LMMStreamChunk,
+    MediaContent,
     MultimodalContent,
     State,
     TextContent,
-    VideoBase64Content,
-    VideoURLContent,
     VolatileAccumulativeMemory,
     VolatileVectorIndex,
     ctx,
     load_env,
     setup_logging,
+    usage_metrics_logger,
 )
 from draive.anthropic import (
     AnthropicConfig,
@@ -294,6 +290,7 @@ async def message(
     async with ctx.scope(
         "chat",
         *user_session.get("state", []),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType, reportArgumentType]
+        completion=usage_metrics_logger(),
     ):
         if user_session.get("streaming", False):  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
             response_message: Message = Message(author="assistant", content="")
@@ -392,26 +389,22 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
             case Image() as image:
                 if url := image.url:
                     parts.append(
-                        ImageURLContent(
-                            image_url=url,
+                        MediaContent.url(
+                            url,
                             mime_type=cast(
-                                Literal["image/jpeg", "image/png", "image/gif"],
-                                image.mime
-                                if image.mime in ["image/jpeg", "image/png", "image/gif"]
-                                else None,
+                                Any,
+                                image.mime or "image/jpeg",
                             ),
                         )
                     )
 
                 elif path := image.path:
                     parts.append(
-                        ImageBase64Content(
-                            image_base64=await _load_file_b64(path),
+                        MediaContent.base64(
+                            await _load_file_b64(path),
                             mime_type=cast(
-                                Literal["image/jpeg", "image/png", "image/gif"],
-                                image.mime
-                                if image.mime in ["image/jpeg", "image/png", "image/gif"]
-                                else None,
+                                Any,
+                                image.mime or "image/jpeg",
                             ),
                         )
                     )
@@ -422,17 +415,23 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
             case Audio() as audio:
                 if url := audio.url:
                     parts.append(
-                        AudioURLContent(
-                            audio_url=url,
-                            mime_type=audio.mime,
+                        MediaContent.url(
+                            url,
+                            mime_type=cast(
+                                Any,
+                                audio.mime or "audio/wav",
+                            ),
                         )
                     )
 
                 elif path := audio.path:
                     parts.append(
-                        AudioBase64Content(
-                            audio_base64=await _load_file_b64(path),
-                            mime_type=audio.mime,
+                        MediaContent.base64(
+                            await _load_file_b64(path),
+                            mime_type=cast(
+                                Any,
+                                audio.mime or "audio/wav",
+                            ),
                         )
                     )
 
@@ -442,17 +441,23 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
             case Video() as video:
                 if url := video.url:
                     parts.append(
-                        VideoURLContent(
-                            video_url=url,
-                            mime_type=video.mime,
+                        MediaContent.url(
+                            url,
+                            mime_type=cast(
+                                Any,
+                                video.mime or "video/mpeg",
+                            ),
                         )
                     )
 
                 elif path := video.path:
                     parts.append(
-                        VideoBase64Content(
-                            video_base64=await _load_file_b64(path),
-                            mime_type=video.mime,
+                        MediaContent.base64(
+                            await _load_file_b64(path),
+                            mime_type=cast(
+                                Any,
+                                video.mime or "video/mpeg",
+                            ),
                         )
                     )
 
@@ -473,24 +478,24 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
 
                     elif path.endswith(".mp3"):
                         parts.append(
-                            AudioBase64Content(
-                                audio_base64=await _load_file_b64(path),
-                                mime_type="audio/mp3",
+                            MediaContent.base64(
+                                await _load_file_b64(path),
+                                mime_type="audio/mpeg",
                             )
                         )
 
                     elif path.endswith(".wav"):
                         parts.append(
-                            AudioBase64Content(
-                                audio_base64=await _load_file_b64(path),
+                            MediaContent.base64(
+                                await _load_file_b64(path),
                                 mime_type="audio/wav",
                             )
                         )
 
                     elif path.endswith(".mp4"):
                         parts.append(
-                            VideoBase64Content(
-                                video_base64=await _load_file_b64(path),
+                            MediaContent.base64(
+                                await _load_file_b64(path),
                                 mime_type="video/mp4",
                             )
                         )
@@ -501,31 +506,40 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
     return MultimodalContent.of(*parts)
 
 
-def _as_message_content(
+def _as_message_content(  # noqa: C901, PLR0912
     content: MultimodalContent,
 ) -> list[Text | Image | Audio | Video | Component]:
     result: list[Text | Image | Audio | Video | Component] = []
     for part in content.parts:
         match part:
             case TextContent() as text:
-                result.append(Text(content=text.text)) if text.text else None
+                result.append(Text(content=text.text))
 
-            case ImageURLContent() as image_url:
-                result.append(Image(url=image_url.image_url))
+            case MediaContent() as media:
+                match media.kind:
+                    case "image":
+                        match media.source:
+                            case str() as url:
+                                result.append(Image(url=url))
 
-            case ImageBase64Content():
-                raise NotImplementedError("Base64 content is not supported yet")
+                            case bytes() as data:
+                                raise NotImplementedError("Base64 content is not supported yet")
 
-            case AudioURLContent() as audio_url:
-                result.append(Audio(url=audio_url.audio_url))
+                    case "audio":
+                        match media.source:
+                            case str() as url:
+                                result.append(Audio(url=url))
 
-            case AudioBase64Content():
-                raise NotImplementedError("Base64 content is not supported yet")
-            case VideoURLContent() as video_url:
-                result.append(Video(url=video_url.video_url))
+                            case bytes() as data:
+                                raise NotImplementedError("Base64 content is not supported yet")
 
-            case VideoBase64Content():
-                raise NotImplementedError("Base64 content is not supported yet")
+                    case "video":
+                        match media.source:
+                            case str() as url:
+                                result.append(Video(url=url))
+
+                            case bytes() as data:
+                                raise NotImplementedError("Base64 content is not supported yet")
 
             case DataModel() as data:
                 result.append(Component(props=data.as_dict()))

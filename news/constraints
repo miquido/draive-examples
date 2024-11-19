@@ -47,7 +47,7 @@ curl-cffi==0.6.4
     # via news (pyproject.toml)
 dataclasses-json==0.6.7
     # via chainlit
-deprecated==1.2.14
+deprecated==1.2.15
     # via
     #   opentelemetry-api
     #   opentelemetry-exporter-otlp-proto-grpc
@@ -55,26 +55,26 @@ deprecated==1.2.14
     #   opentelemetry-semantic-conventions
 distro==1.9.0
     # via openai
-draive==0.30.1
+draive==0.32.0
     # via news (pyproject.toml)
-fastapi==0.115.4
+fastapi==0.115.5
     # via chainlit
 filetype==1.2.0
     # via chainlit
-googleapis-common-protos==1.65.0
+googleapis-common-protos==1.66.0
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-grpcio==1.67.1
+grpcio==1.68.0
     # via opentelemetry-exporter-otlp-proto-grpc
 h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
     #   wsproto
-haiway==0.4.0
+haiway==0.5.1
     # via draive
-httpcore==1.0.6
+httpcore==1.0.7
     # via httpx
 httpx==0.27.2
     # via
@@ -88,7 +88,7 @@ idna==3.10
     #   requests
 importlib-metadata==8.5.0
     # via opentelemetry-api
-jiter==0.7.0
+jiter==0.7.1
     # via openai
 lazify==0.4.0
     # via chainlit
@@ -112,9 +112,9 @@ numpy==1.26.4
     # via
     #   chainlit
     #   draive
-openai==1.54.3
+openai==1.54.4
     # via draive
-opentelemetry-api==1.28.0
+opentelemetry-api==1.28.2
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
@@ -122,29 +122,29 @@ opentelemetry-api==1.28.0
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
     #   uptrace
-opentelemetry-exporter-otlp==1.28.0
+opentelemetry-exporter-otlp==1.28.2
     # via uptrace
-opentelemetry-exporter-otlp-proto-common==1.28.0
+opentelemetry-exporter-otlp-proto-common==1.28.2
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-exporter-otlp-proto-grpc==1.28.0
+opentelemetry-exporter-otlp-proto-grpc==1.28.2
     # via opentelemetry-exporter-otlp
-opentelemetry-exporter-otlp-proto-http==1.28.0
+opentelemetry-exporter-otlp-proto-http==1.28.2
     # via opentelemetry-exporter-otlp
-opentelemetry-instrumentation==0.49b0
+opentelemetry-instrumentation==0.49b2
     # via uptrace
-opentelemetry-proto==1.28.0
+opentelemetry-proto==1.28.2
     # via
     #   opentelemetry-exporter-otlp-proto-common
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-sdk==1.28.0
+opentelemetry-sdk==1.28.2
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
     #   uptrace
-opentelemetry-semantic-conventions==0.49b0
+opentelemetry-semantic-conventions==0.49b2
     # via
     #   opentelemetry-instrumentation
     #   opentelemetry-sdk
@@ -174,9 +174,9 @@ pydantic-core==2.23.4
     # via pydantic
 pygments==2.18.0
     # via rich
-pyjwt==2.9.0
+pyjwt==2.10.0
     # via chainlit
-pyright==1.1.388
+pyright==1.1.389
     # via news (pyproject.toml)
 python-dotenv==1.0.1
     # via chainlit
@@ -196,7 +196,7 @@ requests==2.32.3
     #   tiktoken
 rich==13.9.4
     # via bandit
-ruff==0.7.2
+ruff==0.7.4
     # via news (pyproject.toml)
 simple-websocket==1.1.0
     # via python-engineio
@@ -207,7 +207,7 @@ sniffio==1.3.1
     #   openai
 soupsieve==2.6
     # via beautifulsoup4
-starlette==0.41.2
+starlette==0.41.3
     # via
     #   chainlit
     #   fastapi
@@ -217,7 +217,7 @@ syncer==2.0.3
     # via chainlit
 tiktoken==0.8.0
     # via draive
-tomli==2.0.2
+tomli==2.1.0
     # via chainlit
 tqdm==4.67.0
     # via openai
@@ -232,7 +232,7 @@ typing-extensions==4.12.2
     #   typing-inspect
 typing-inspect==0.9.0
     # via dataclasses-json
-uptrace==1.27.0
+uptrace==1.28.2
     # via chainlit
 urllib3==2.2.3
     # via requests
@@ -246,5 +246,5 @@ wrapt==1.16.0
     #   opentelemetry-instrumentation
 wsproto==1.2.0
     # via simple-websocket
-zipp==3.20.2
+zipp==3.21.0
     # via importlib-metadata
