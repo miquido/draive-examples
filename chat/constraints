@@ -62,7 +62,7 @@ distro==1.9.0
     # via
     #   anthropic
     #   openai
-draive==0.32.0
+draive==0.33.0
     # via chat (pyproject.toml)
 fastapi==0.115.5
     # via chainlit
@@ -148,7 +148,7 @@ onnx==1.17.0
     # via fastembed
 onnxruntime==1.20.0
     # via fastembed
-openai==1.54.4
+openai==1.54.5
     # via draive
 opentelemetry-api==1.28.2
     # via
@@ -265,7 +265,7 @@ starlette==0.41.3
     # via
     #   chainlit
     #   fastapi
-stevedore==5.3.0
+stevedore==5.4.0
     # via bandit
 sympy==1.13.3
     # via onnxruntime

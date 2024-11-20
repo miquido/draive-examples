@@ -13,7 +13,7 @@ dependencies = [
     "beautifulsoup4~=4.12",
     "lxml~=5.2",
     "curl_cffi~=0.6.2",
-    "draive[openai]~=0.32.0",
+    "draive[openai]~=0.33.0",
     "pdfminer.six==20231228",
     "chainlit~=1.1",
 ]

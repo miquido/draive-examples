@@ -213,10 +213,7 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                     parts.append(
                         MediaContent.url(
                             url,
-                            mime_type=cast(
-                                Any,
-                                image.mime or "image/jpeg",
-                            ),
+                            media="image",
                         )
                     )
 
@@ -224,7 +221,7 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                     parts.append(
                         MediaContent.base64(
                             await _load_file_b64(path),
-                            mime_type=cast(
+                            media=cast(
                                 Any,
                                 image.mime or "image/jpeg",
                             ),
@@ -239,10 +236,7 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                     parts.append(
                         MediaContent.url(
                             url,
-                            mime_type=cast(
-                                Any,
-                                audio.mime or "audio/wav",
-                            ),
+                            media="audio",
                         )
                     )
 
@@ -250,7 +244,7 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                     parts.append(
                         MediaContent.base64(
                             await _load_file_b64(path),
-                            mime_type=cast(
+                            media=cast(
                                 Any,
                                 audio.mime or "audio/wav",
                             ),
@@ -265,10 +259,7 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                     parts.append(
                         MediaContent.url(
                             url,
-                            mime_type=cast(
-                                Any,
-                                video.mime or "video/mpeg",
-                            ),
+                            media="video",
                         )
                     )
 
@@ -276,7 +267,7 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                     parts.append(
                         MediaContent.base64(
                             await _load_file_b64(path),
-                            mime_type=cast(
+                            media=cast(
                                 Any,
                                 video.mime or "video/mpeg",
                             ),
@@ -298,7 +289,7 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                         parts.append(
                             MediaContent.base64(
                                 await _load_file_b64(path),
-                                mime_type="audio/mpeg",
+                                media="audio/mpeg",
                             )
                         )
 
@@ -306,7 +297,7 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                         parts.append(
                             MediaContent.base64(
                                 await _load_file_b64(path),
-                                mime_type="audio/wav",
+                                media="audio/wav",
                             )
                         )
 
@@ -314,7 +305,7 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
                         parts.append(
                             MediaContent.base64(
                                 await _load_file_b64(path),
-                                mime_type="video/mp4",
+                                media="video/mp4",
                             )
                         )
 
