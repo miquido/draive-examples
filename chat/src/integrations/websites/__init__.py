@@ -5,10 +5,10 @@ from integrations.websites.state import Websites
 from integrations.websites.types import WebsiteError
 
 __all__ = [
-    "Websites",
+    "HTMLContent",
+    "HTMLContentPart",
     "WebsiteClient",
     "WebsiteError",
     "WebsiteScrappingConfig",
-    "HTMLContent",
-    "HTMLContentPart",
+    "Websites",
 ]

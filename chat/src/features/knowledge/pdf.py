@@ -1,7 +1,7 @@
 from io import BytesIO
 
 from draive import (
-    VolatileVectorIndex,
+    VectorIndex,
     count_text_tokens,
     ctx,
     split_text,
@@ -24,7 +24,7 @@ async def index_pdf(
     """
 
     ctx.log_debug("Indexing PDF %s", source)
-    await ctx.state(VolatileVectorIndex).index(
+    await ctx.state(VectorIndex).index(
         KnowledgeItem,
         indexed_value=KnowledgeItem._.content,
         values=[

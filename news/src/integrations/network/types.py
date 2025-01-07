@@ -5,8 +5,8 @@ from integrations.network.config import WebsiteScrappingConfig
 from integrations.network.content import HTMLContent, RSSContent
 
 __all__ = [
-    "HeadersScrapping",
     "HTMLScrapping",
+    "HeadersScrapping",
     "NetworkError",
     "RSSScrapping",
     "WebsiteScrapperConfigAccessing",

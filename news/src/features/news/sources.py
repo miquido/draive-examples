@@ -3,7 +3,6 @@ from draive import (
     AgentOutput,
     DataModel,
     Field,
-    Toolbox,
     agent,
     ctx,
     frozenlist,
@@ -54,7 +53,7 @@ async def sources(
         NewsSources,
         instruction=INSTRUCTION,
         input=message.content,
-        tools=Toolbox(read_rss, explore_news),
+        tools=[read_rss, explore_news],
         schema_injection="full",
     )
 

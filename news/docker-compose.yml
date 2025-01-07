@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   chat:
     build:
@@ -10,6 +9,5 @@ services:
     restart: no
     environment:
       PYTHONOPTIMIZE: 2
-      CHAINLIT_PORT: ${CHAINLIT_PORT}
+      CHAINLIT_PORT: ${CHAINLIT_PORT:-8888}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}

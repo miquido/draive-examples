@@ -39,5 +39,5 @@ async def prepare_news(
                 sources=sources,
             ),
         ),
-        timeout=240,
+        timeout=120,
     )

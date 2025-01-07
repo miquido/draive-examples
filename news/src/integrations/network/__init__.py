@@ -5,12 +5,12 @@ from integrations.network.state import Network
 from integrations.network.types import NetworkError
 
 __all__ = [
-    "NetworkClient",
-    "NetworkError",
-    "Network",
-    "WebsiteScrappingConfig",
     "HTMLContent",
     "HTMLContentPart",
+    "Network",
+    "NetworkClient",
+    "NetworkError",
     "RSSArticle",
     "RSSContent",
+    "WebsiteScrappingConfig",
 ]

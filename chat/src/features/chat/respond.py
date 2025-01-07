@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from typing import Literal, overload
 
 from draive import (
@@ -6,7 +6,6 @@ from draive import (
     LMMStreamChunk,
     Memory,
     MultimodalContent,
-    Toolbox,
     conversation_completion,
 )
 
@@ -23,7 +22,7 @@ __all__ = [
 async def chat_respond(
     instruction: str,
     message: MultimodalContent,
-    memory: Memory[list[ConversationMessage], ConversationMessage],
+    memory: Memory[Sequence[ConversationMessage], ConversationMessage],
     stream: Literal[False] = False,
 ) -> ConversationMessage: ...
 
@@ -32,7 +31,7 @@ async def chat_respond(
 async def chat_respond(
     instruction: str,
     message: MultimodalContent,
-    memory: Memory[list[ConversationMessage], ConversationMessage],
+    memory: Memory[Sequence[ConversationMessage], ConversationMessage],
     stream: Literal[True],
 ) -> AsyncIterator[LMMStreamChunk]: ...
 
@@ -40,7 +39,7 @@ async def chat_respond(
 async def chat_respond(
     instruction: str,
     message: MultimodalContent,
-    memory: Memory[list[ConversationMessage], ConversationMessage],
+    memory: Memory[Sequence[ConversationMessage], ConversationMessage],
     stream: bool = False,
 ) -> AsyncIterator[LMMStreamChunk] | ConversationMessage:
     """
@@ -52,11 +51,11 @@ async def chat_respond(
             instruction=instruction,  # pass the instruction
             input=message,  # use the input message
             memory=memory,  # work in context of given memory
-            tools=Toolbox(  # allow using set of tools
+            tools=[  # allow using set of tools
                 utc_datetime,
                 web_page_content,
                 knowledge_search,
-            ),
+            ],
             stream=True,  # and use streaming api
         )
 
@@ -65,9 +64,9 @@ async def chat_respond(
             instruction=instruction,  # pass the instruction
             input=message,  # use the input message
             memory=memory,  # work in context of given memory
-            tools=Toolbox(  # allow using set of tools
+            tools=[  # allow using set of tools
                 utc_datetime,
                 web_page_content,
                 knowledge_search,
-            ),
+            ],
         )

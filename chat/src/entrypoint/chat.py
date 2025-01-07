@@ -7,7 +7,7 @@ from chainlit import (
     Audio,
     ChatProfile,
     ChatSettings,
-    Component,
+    CustomElement,
     ErrorMessage,
     File,
     Image,
@@ -25,19 +25,18 @@ from chainlit import (
 )
 from chainlit.input_widget import TextInput
 from draive import (
-    ConversationMessage,
     DataModel,
     LMMStreamChunk,
     MediaContent,
+    Memory,
+    MetricsLogger,
     MultimodalContent,
     State,
     TextContent,
-    VolatileAccumulativeMemory,
-    VolatileVectorIndex,
+    VectorIndex,
     ctx,
     load_env,
     setup_logging,
-    usage_metrics_logger,
 )
 from draive.anthropic import (
     AnthropicConfig,
@@ -54,6 +53,7 @@ from draive.gemini import (
 from draive.ollama import OllamaChatConfig, ollama_lmm
 from draive.openai import (
     OpenAIChatConfig,
+    OpenAIEmbeddingConfig,
     openai_lmm,
     openai_streaming_lmm,
     openai_text_embedding,
@@ -142,11 +142,11 @@ async def prepare() -> None:
     # which will return up to 8 last messages to the LLM context
     user_session.set(  # pyright: ignore[reportUnknownMemberType]
         "chat_memory",
-        VolatileAccumulativeMemory[ConversationMessage]([], limit=8),
+        Memory.accumulative_volatile(limit=12),
     )
     # select services based on current profile and form a base state for session
     state: list[State] = [
-        VolatileVectorIndex(storage={}),  # it will be used as a knowledge base
+        VectorIndex.volatile(),  # it will be used as a knowledge base
         await WebsiteClient.prepare().initialize(),
     ]
     match user_session.get("chat_profile"):  # pyright: ignore[reportUnknownMemberType]
@@ -165,6 +165,7 @@ async def prepare() -> None:
                         model="gpt-4o-mini",
                         temperature=DEFAULT_TEMPERATURE,
                     ),
+                    OpenAIEmbeddingConfig(model="text-embedding-3-small"),
                 ]
             )
 
@@ -183,6 +184,7 @@ async def prepare() -> None:
                         model="gpt-4o",
                         temperature=DEFAULT_TEMPERATURE,
                     ),
+                    OpenAIEmbeddingConfig(model="text-embedding-3-small"),
                 ]
             )
 
@@ -214,7 +216,7 @@ async def prepare() -> None:
             state.extend(
                 [
                     gemini_lmm(),
-                    gemini_tokenizer("gemini-1.5-flash"),
+                    await gemini_tokenizer("gemini-1.5-flash"),
                     gemini_text_embedding(),
                     GeminiConfig(
                         model="gemini-1.5-flash",
@@ -231,7 +233,7 @@ async def prepare() -> None:
             state.extend(
                 [
                     anthropic_lmm(),
-                    anthropic_tokenizer(),
+                    await anthropic_tokenizer(),
                     # use locally running embedding
                     await fastembed_text_embedding("nomic-ai/nomic-embed-text-v1.5"),
                     AnthropicConfig(
@@ -290,7 +292,7 @@ async def message(
     async with ctx.scope(
         "chat",
         *user_session.get("state", []),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType, reportArgumentType]
-        completion=usage_metrics_logger(),
+        metrics=MetricsLogger.handler(),
     ):
         if user_session.get("streaming", False):  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
             response_message: Message = Message(author="assistant", content="")
@@ -499,8 +501,8 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
 
 def _as_message_content(  # noqa: C901, PLR0912
     content: MultimodalContent,
-) -> list[Text | Image | Audio | Video | Component]:
-    result: list[Text | Image | Audio | Video | Component] = []
+) -> list[Text | Image | Audio | Video | CustomElement]:
+    result: list[Text | Image | Audio | Video | CustomElement] = []
     for part in content.parts:
         match part:
             case TextContent() as text:
@@ -533,7 +535,7 @@ def _as_message_content(  # noqa: C901, PLR0912
                                 raise NotImplementedError("Base64 content is not supported yet")
 
             case DataModel() as data:
-                result.append(Component(props=data.as_dict()))
+                result.append(CustomElement(props=data.as_dict()))
 
     return result
 

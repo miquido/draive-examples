@@ -1,5 +1,7 @@
+from collections.abc import Sequence
+
 from draive import (
-    VolatileVectorIndex,
+    VectorIndex,
     ctx,
     tool,
 )
@@ -17,12 +19,12 @@ async def knowledge_search(query: str) -> str:
     Search the knowledge base using contextually provided VolatileVectorIndex.
     """
 
-    results: list[KnowledgeItem] = await ctx.state(VolatileVectorIndex).search(
+    results: Sequence[KnowledgeItem] = await ctx.state(VectorIndex).search(
         KnowledgeItem,
         query=query,
         limit=3,
     )
 
-    return "---".join(
+    return "\n---\n".join(
         [f"source:\n{result.source}\ncontent:\n{result.content}" for result in results]
     )

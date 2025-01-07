@@ -3,28 +3,31 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Chat"
+name = "Example"
 version = "0.1.0"
 maintainers = [
   {name = "Kacper Kaliński", email = "kacper.kalinski@miquido.com"}
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "beautifulsoup4~=4.12",
-    "curl_cffi~=0.6.2",
-    "draive[openai,anthropic,gemini,ollama,fastembed]~=0.33.0",
-    "pdfminer.six==20231228",
-    "chainlit~=1.1",
+    "draive[openai,anthropic,gemini,ollama,fastembed]~=0.37.0",
+    "beautifulsoup4",
+    "curl_cffi",
+    "pdfminer.six",
 ]
 
 [project.urls]
 Homepage = "https://miquido.com"
 
-[project.optional-dependencies]
+[dependency-groups]
+chat = [
+    "Example",
+    "chainlit",
+]
 dev = [
-    "bandit~=1.7",
-    "pyright~=1.1",
-    "ruff~=0.5",
+    "bandit",
+    "pyright",
+    "ruff",
 ]
 
 [tool.ruff]

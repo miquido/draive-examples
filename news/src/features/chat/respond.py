@@ -1,8 +1,9 @@
+from collections.abc import Sequence
+
 from draive import (
     ConversationMessage,
     Memory,
     MultimodalContent,
-    Toolbox,
     conversation_completion,
 )
 
@@ -29,7 +30,7 @@ working further as your job is done.
 
 
 async def chat_respond(
-    memory: Memory[list[ConversationMessage], ConversationMessage],
+    memory: Memory[Sequence[ConversationMessage], ConversationMessage],
     message: MultimodalContent,
 ) -> ConversationMessage:
     """
@@ -40,5 +41,5 @@ async def chat_respond(
         instruction=INSTRUCTION,
         input=message,
         memory=memory,
-        tools=Toolbox(prepare_news, utc_datetime),
+        tools=[prepare_news, utc_datetime],
     )

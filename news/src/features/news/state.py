@@ -1,21 +1,21 @@
 from collections.abc import Sequence
 
-from draive import DataModel, Field, frozenlist
+from draive import DataModel, Field
 
 __all__ = [
-    "NewsScratchpad",
-    "NewsArticleScratchpad",
-    "NewsPage",
     "NewsArticle",
-    "NewsTask",
+    "NewsArticleScratchpad",
     "NewsArticleSource",
+    "NewsPage",
+    "NewsScratchpad",
+    "NewsTask",
 ]
 
 
 class NewsTask(DataModel):
     topic: str = ""
     guidelines: str = ""
-    sources: frozenlist[str] = Field(default_factory=tuple)
+    sources: Sequence[str] = Field(default_factory=tuple)
 
 
 class NewsArticleSource(DataModel):
@@ -34,7 +34,7 @@ class NewsArticleScratchpad(DataModel):
 
 class NewsScratchpad(DataModel):
     task: NewsTask = Field(default_factory=NewsTask)
-    articles: frozenlist[NewsArticleScratchpad] = Field(default_factory=tuple)
+    articles: Sequence[NewsArticleScratchpad] = Field(default_factory=tuple)
 
 
 class NewsArticle(DataModel):

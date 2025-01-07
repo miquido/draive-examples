@@ -5,7 +5,7 @@ from typing import Any, cast
 from chainlit import (
     Audio,
     ChatProfile,
-    Component,
+    CustomElement,
     ErrorMessage,
     File,
     Image,
@@ -21,13 +21,13 @@ from chainlit import (
     user_session,
 )
 from draive import (
-    ConversationMessage,
     DataModel,
     MediaContent,
+    Memory,
+    MetricsLogger,
     MultimodalContent,
     State,
     TextContent,
-    VolatileAccumulativeMemory,
     ctx,
     load_env,
     setup_logging,
@@ -47,7 +47,7 @@ load_env()  # load env first if needed
 setup_logging("demo", "metrics")
 
 
-@set_chat_profiles
+@set_chat_profiles  # pyright: ignore[reportArgumentType]
 async def prepare_profiles(user: Any) -> list[ChatProfile]:
     """
     Prepare chat profiles allowing to select service providers
@@ -67,7 +67,7 @@ async def prepare_profiles(user: Any) -> list[ChatProfile]:
     ]
 
 
-@set_starters
+@set_starters  # pyright: ignore[reportArgumentType]
 async def prepare_starters(user: Any) -> list[Starter]:
     """
     List of starter messages for the chat, can be used for a common task shortcuts
@@ -97,7 +97,7 @@ async def prepare() -> None:
     # which will return up to 12 last messages to the LLM context
     user_session.set(  # pyright: ignore[reportUnknownMemberType]
         "chat_memory",
-        VolatileAccumulativeMemory[ConversationMessage]([], limit=12),
+        Memory.accumulative_volatile(limit=12),
     )
     # select services based on current profile and form a base state for session
     config: OpenAIChatConfig
@@ -149,6 +149,7 @@ async def message(
     async with ctx.scope(
         "chat",
         *user_session.get("state", []),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType, reportArgumentType]
+        metrics=MetricsLogger.handler(),
     ):
         try:
             # request a chat conversation completion stream
@@ -317,8 +318,8 @@ async def _as_multimodal_content(  # noqa: C901, PLR0912
 
 def _as_message_content(  # noqa: C901, PLR0912
     content: MultimodalContent,
-) -> list[Text | Image | Audio | Video | Component]:
-    result: list[Text | Image | Audio | Video | Component] = []
+) -> list[Text | Image | Audio | Video | CustomElement]:
+    result: list[Text | Image | Audio | Video | CustomElement] = []
     for part in content.parts:
         match part:
             case TextContent() as text:
@@ -351,7 +352,7 @@ def _as_message_content(  # noqa: C901, PLR0912
                                 raise NotImplementedError("Base64 content is not supported yet")
 
             case DataModel() as data:
-                result.append(Component(props=data.as_dict()))
+                result.append(CustomElement(props=data.as_dict()))
 
     return result
 

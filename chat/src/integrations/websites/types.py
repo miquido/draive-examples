@@ -4,9 +4,9 @@ from integrations.websites.config import WebsiteScrappingConfig
 from integrations.websites.content import HTMLContent
 
 __all__ = [
-    "WebsiteScrapping",
-    "WebsiteScrapperConfigAccessing",
     "WebsiteError",
+    "WebsiteScrapperConfigAccessing",
+    "WebsiteScrapping",
 ]
 
 
