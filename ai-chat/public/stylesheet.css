@@ -1,0 +1,4 @@
+button.positive-feedback-off,
+button.negative-feedback-off {
+  display: none !important;
+}
