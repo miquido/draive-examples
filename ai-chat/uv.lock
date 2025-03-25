@@ -173,7 +173,7 @@ migrations = [
 [package.metadata]
 requires-dist = [
     { name = "asyncpg", specifier = "~=0.30" },
-    { name = "draive", extras = ["openai"], specifier = "~=0.47.0" },
+    { name = "draive", extras = ["openai"], specifier = "~=0.53.0" },
     { name = "httpx", specifier = "~=0.28" },
 ]
 
@@ -295,15 +295,15 @@ wheels = [
 
 [[package]]
 name = "draive"
-version = "0.47.0"
+version = "0.53.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "haiway" },
     { name = "numpy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/30/5e/95c6e4143e3949f9646cb1b831422b6fc6bbddd856250b8d520f8e046540/draive-0.47.0.tar.gz", hash = "sha256:8c324a4c63cd04ab885d7ca86f38eb556c055f6ed40c3b333e163fa7c3145680", size = 2961949 }
+sdist = { url = "https://files.pythonhosted.org/packages/fa/79/913232d3ae8b20b8ccbca9fadfe08095a79acc3e3b33100a225fe95e85de/draive-0.53.0.tar.gz", hash = "sha256:bd20b386a23aec59783a70510565cabbf56517b993d113c635ea3719a32ecf13", size = 2970646 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/e8/b6a0ac21aa8d2123a969377198538a0ef4929e823cefc0d4080762448418/draive-0.47.0-py3-none-any.whl", hash = "sha256:e0909e288c380fae842fac8a40d3c7ea486bc63da930708b890eb3faabc49fb8", size = 2963139 },
+    { url = "https://files.pythonhosted.org/packages/1b/db/e846d90c1b5177ea83bd6cb143c848b3fec4e6dd53a1194a9c2b12a5d13d/draive-0.53.0-py3-none-any.whl", hash = "sha256:59dad08a7273d5dc91c44df6bcbab6e06218ef08317afb435908b960276a491a", size = 2973484 },
 ]
 
 [package.optional-dependencies]
@@ -386,11 +386,11 @@ wheels = [
 
 [[package]]
 name = "haiway"
-version = "0.11.1"
+version = "0.13.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/67/19/a5eafd2965420afa1f064b0b9dfec6d6ef70437b01217077aec06bd22397/haiway-0.11.1.tar.gz", hash = "sha256:47ddca5757f3cea737df444aeba7cedc7cfe09c9ae1c388e91bda18e4191b13c", size = 81341 }
+sdist = { url = "https://files.pythonhosted.org/packages/a6/36/6d97d45fd0440514a09947c4da7d064adc09b7f9a8e9c8cd6d55e83d79fc/haiway-0.13.1.tar.gz", hash = "sha256:c0cc5f48085412f9e5af35b7795e51386ef09b936d1be08565c9c8248f209772", size = 86996 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cf/fd/072845a86ded5cef70c26aa29742377f2136a0a16485b328e076b95fb936/haiway-0.11.1-py3-none-any.whl", hash = "sha256:26d95938585592c8812b73c425028a5e7423c82493a01a81fd557beb5ed1e9c3", size = 46793 },
+    { url = "https://files.pythonhosted.org/packages/bd/04/e1ab362f8046fd2d9d9e84f0531d543198cf5b078dc9af381a409e956950/haiway-0.13.1-py3-none-any.whl", hash = "sha256:55b1bc8ffb77cf106ffd130b490c0541ec32a0811a7a8c76fb9ce68d3f0ab3c0", size = 50858 },
 ]
 
 [[package]]
