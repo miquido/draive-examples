@@ -6,10 +6,6 @@ __all__ = [
 ]
 
 router = APIRouter()
-"""
-Router containing all server technical routes such as status.
-"""
-
 
 @router.get(
     path="/health",
