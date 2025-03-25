@@ -66,4 +66,4 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-CMD ["python", "-m", "src.migrations"]
+CMD ["python", "-m", "migrations"]

@@ -58,13 +58,7 @@ async def auth_callback(username: str, password: str):
 
 @set_starters
 async def prepare_starters(user: Any) -> list[Starter]:
-    return [  # TODO: refine or remove starters
-        Starter(
-            label="Python script for daily email reports",
-            message="Write a script to automate sending daily email reports in Python,"
-            " and walk me through how I would set it up.",
-        ),
-    ]
+    return []
 
 
 @on_chat_resume
