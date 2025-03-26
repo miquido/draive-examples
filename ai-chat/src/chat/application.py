@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from chat.frontend import setup_frontend
 from chat.middlewares import ContextMiddleware
 from chat.routes import technical_router
-from integrations.postgres.client import PostgresClient
+from integrations.postgres import PostgresConnectionPool, PostgresConnection
 
 __all__ = [
     "app",
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     openai = OpenAI()
     disposables = Disposables(
         openai,
-        PostgresClient(),
+        PostgresConnectionPool(),
     )
     async with disposables as state:
         app.extra["state"] = (

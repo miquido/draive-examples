@@ -38,9 +38,9 @@ class PostgresDataLayer(BaseDataLayer):
     ) -> PersistedUser | None:
         ctx.log_debug(f"Accessing user ({identifier}) data...")
         try:
-            async with ctx.state(Postgres).connection() as postgres:
+            async with ctx.scope("user-access", disposables=(Postgres.connection(),)):
                 ctx.log_debug("...fetching user data...")
-                record: PostgresRow | None = await postgres.fetch_one(
+                record: PostgresRow | None = await PostgresConnection.fetch_one(
                     SELECT_USER_QUERY,
                     identifier,
                 )
@@ -68,16 +68,16 @@ class PostgresDataLayer(BaseDataLayer):
     ) -> PersistedUser | None:
         ctx.log_debug(f"Creating user ({user.identifier})...")
         try:
-            async with ctx.state(Postgres).connection() as postgres:
+            async with ctx.scope("creating-user", disposables=(Postgres.connection(),)):
                 ctx.log_debug("...inserting user data...")
-                await postgres.execute(
+                await PostgresConnection.fetch(
                     UPSERT_USER_QUERY,
                     user.identifier,
                     json.dumps(user.metadata) if user.metadata else None,  # pyright: ignore
                 )
 
                 ctx.log_debug("...fetching user data...")
-                record: PostgresRow | None = await postgres.fetch_one(
+                record: PostgresRow | None = await PostgresConnection.fetch_one(
                     SELECT_USER_QUERY,
                     user.identifier,
                 )
@@ -128,9 +128,9 @@ class PostgresDataLayer(BaseDataLayer):
     ) -> str:
         ctx.log_debug(f"Accessing thread ({thread_id}) author...")
         try:
-            async with ctx.state(Postgres).connection() as postgres:
+            async with ctx.scope("author-data", disposables=(Postgres.connection(),)):
                 ctx.log_debug("...fetching author data...")
-                record: PostgresRow | None = await postgres.fetch_one(
+                record: PostgresRow | None = await PostgresConnection.fetch_one(
                     SELECT_THREAD_AUTHOR_QUERY,
                     UUID(hex=thread_id),
                 )
@@ -163,9 +163,9 @@ class PostgresDataLayer(BaseDataLayer):
         ctx.log_debug(f"Accessing user ({filters.userId}) threads...")
         try:
             limit: int = pagination.first or 10
-            async with ctx.state(Postgres).connection() as postgres:
+            async with ctx.scope("threads-data", disposables=(Postgres.connection(),)):
                 ctx.log_debug("...fetching threads data...")
-                records: Sequence[PostgresRow] = await postgres.execute(
+                records: Sequence[PostgresRow] = await PostgresConnection.fetch(
                     SELECT_USER_THREADS_QUERY,
                     UUID(hex=filters.userId),
                     UUID(hex=pagination.cursor) if pagination.cursor else None,
@@ -179,11 +179,9 @@ class PostgresDataLayer(BaseDataLayer):
                     thread: ThreadDict = self._decode_thread(record)
                     thread["elements"] = await self.get_thread_elements(
                         thread_id=thread["id"],
-                        postgres=postgres,
                     )
                     thread["steps"] = await self.get_thread_steps(
                         thread_id=thread["id"],
-                        postgres=postgres,
                     )
                     threads.append(thread)
 
@@ -212,9 +210,9 @@ class PostgresDataLayer(BaseDataLayer):
     ) -> ThreadDict:
         ctx.log_debug(f"Accessing thread ({thread_id}) data...")
         try:
-            async with ctx.state(Postgres).connection() as postgres:
+            async with ctx.scope("thread-data", disposables=(Postgres.connection(),)):
                 ctx.log_debug("...fetching thread data...")
-                record: PostgresRow | None = await postgres.fetch_one(
+                record: PostgresRow | None = await PostgresConnection.fetch_one(
                     SELECT_THREAD_QUERY,
                     UUID(hex=thread_id),
                 )
@@ -226,11 +224,9 @@ class PostgresDataLayer(BaseDataLayer):
 
                 thread["elements"] = await self.get_thread_elements(
                     thread_id=thread_id,
-                    postgres=postgres,
                 )
                 thread["steps"] = await self.get_thread_steps(
                     thread_id=thread_id,
-                    postgres=postgres,
                 )
 
                 return thread
@@ -279,10 +275,9 @@ class PostgresDataLayer(BaseDataLayer):
         self,
         *,
         thread_id: str,
-        postgres: PostgresConnection,
     ) -> list[ElementDict]:
         ctx.log_debug("...fetching thread elements data...")
-        records: Sequence[PostgresRow] = await postgres.execute(
+        records: Sequence[PostgresRow] = await PostgresConnection.fetch(
             SELECT_THREAD_ELEMENTS_QUERY,
             UUID(hex=thread_id),
         )
@@ -293,10 +288,9 @@ class PostgresDataLayer(BaseDataLayer):
         self,
         *,
         thread_id: str,
-        postgres: PostgresConnection,
     ) -> list[StepDict]:
         ctx.log_debug("...fetching thread steps data...")
-        records: Sequence[PostgresRow] = await postgres.execute(
+        records: Sequence[PostgresRow] = await PostgresConnection.fetch(
             SELECT_THREAD_STEPS_QUERY,
             UUID(hex=thread_id),
         )
@@ -309,8 +303,8 @@ class PostgresDataLayer(BaseDataLayer):
     ) -> None:
         ctx.log_debug(f"Deleting thread ({thread_id}) data...")
         try:
-            async with ctx.state(Postgres).connection() as postgres:
-                await postgres.execute(
+            async with ctx.scope("deleting-thread", disposables=(Postgres.connection(),)):
+                await PostgresConnection.execute(
                     DELETE_THREAD_QUERY,
                     UUID(hex=thread_id),
                 )
@@ -335,8 +329,8 @@ class PostgresDataLayer(BaseDataLayer):
     ):
         ctx.log_debug(f"Updating thread ({thread_id})...")
         try:
-            async with ctx.state(Postgres).connection() as postgres:
-                await postgres.execute(
+            async with ctx.scope("updating-thread", disposables=(Postgres.connection(),)):
+                await PostgresConnection.execute(
                     UPSERT_THREAD_QUERY,
                     UUID(hex=thread_id),
                     name
@@ -390,8 +384,8 @@ class PostgresDataLayer(BaseDataLayer):
             if element.mime and element.mime.startswith("image"):
                 content = normalized_image(content)
 
-            async with ctx.state(Postgres).connection() as postgres:
-                await postgres.execute(
+            async with ctx.scope("creating-thread", disposables=(Postgres.connection(),)):
+                await PostgresConnection.fetch(
                     UPSERT_THREAD_ELEMENT_QUERY,
                     UUID(hex=element.id),  # id
                     UUID(hex=element.thread_id),  # thread_id
@@ -422,8 +416,8 @@ class PostgresDataLayer(BaseDataLayer):
     ) -> ElementDict | None:
         ctx.log_debug(f"Accessing element ({element_id}) of thread({thread_id})...")
         try:
-            async with ctx.state(Postgres).connection() as postgres:
-                record: PostgresRow | None = await postgres.fetch_one(
+            async with ctx.scope("accessing-thread-element", disposables=(Postgres.connection(),)):
+                record: PostgresRow | None = await PostgresConnection.fetch_one(
                     SELECT_THREAD_ELEMENT_QUERY,
                     UUID(hex=element_id),
                 )
@@ -494,8 +488,8 @@ class PostgresDataLayer(BaseDataLayer):
     ) -> None:
         ctx.log_debug(f"Deleting thread ({thread_id}) element ({element_id})...")
         try:
-            async with ctx.state(Postgres).connection() as postgres:
-                await postgres.execute(
+            async with ctx.scope("deleting-thread", disposables=(Postgres.connection(),)):
+                await PostgresConnection.execute(
                     DELETE_THREAD_ELEMENT_QUERY,
                     UUID(hex=thread_id),
                 )
@@ -531,8 +525,8 @@ class PostgresDataLayer(BaseDataLayer):
                 if "showInput" in step_dict
                 else None
             )
-            async with ctx.state(Postgres).connection() as postgres:
-                await postgres.execute(
+            async with ctx.scope("updating-thread-step", disposables=(Postgres.connection(),)):
+                await PostgresConnection.fetch(
                     UPSERT_THREAD_STEP_QUERY,
                     UUID(hex=step_dict["id"]),  # id # pyright: ignore
                     datetime.fromisoformat(step_dict.get("createdAt"))  # created # pyright: ignore
@@ -635,8 +629,8 @@ class PostgresDataLayer(BaseDataLayer):
     ) -> None:
         ctx.log_debug(f"Deleting thread step ({step_id})...")
         try:
-            async with ctx.state(Postgres).connection() as postgres:
-                await postgres.execute(
+            async with ctx.scope("user-access", disposables=(Postgres.connection(),)):
+                await PostgresConnection.fetch(
                     DELETE_THREAD_STEP_QUERY,
                     UUID(hex=step_id),
                 )
@@ -675,8 +669,8 @@ async def fetch_element_content(
 ) -> bytes | None:
     ctx.log_debug(f"Accessing element ({element_id}) content...")
     try:
-        async with ctx.state(Postgres).connection() as postgres:
-            record: PostgresRow | None = await postgres.fetch_one(
+        async with ctx.scope("accessing-element", disposables=(Postgres.connection(),)):
+            record: PostgresRow | None = await PostgresConnection.fetch_one(
                 SELECT_THREAD_ELEMENT_CONTENT_QUERY,
                 UUID(hex=element_id),
             )
