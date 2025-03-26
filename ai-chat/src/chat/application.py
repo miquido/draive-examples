@@ -49,7 +49,7 @@ async def lifespan(app: FastAPI):
 
 app: FastAPI = FastAPI(
     title="ChainlitChat",
-    description="ChainlitChat template",
+    description="ChainlitChat example",
     version="0.1.0",
     lifespan=lifespan,
     openapi_url="/openapi.json" if __debug__ else None,

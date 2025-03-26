@@ -10,7 +10,7 @@ TESTS_PATH := tests
 -include .env
 
 ifndef UV_VERSION
-	UV_VERSION := 0.6.5
+	UV_VERSION := 0.6.10
 endif
 
 .PHONY: uv_check venv sync update format lint test migrations chat_run docker_run sidekicks
@@ -77,10 +77,6 @@ lint:
 	@bandit -r $(SOURCES_PATH)
 	@ruff check $(SOURCES_PATH) $(TESTS_PATH)
 	@pyright --project ./
-
-# Run tests suite.
-test:
-	@python -B -m pytest -v --cov=$(SOURCES_PATH) --rootdir=$(TESTS_PATH)
 
 # Run postgres migrations and rabitmq setup using provided environment variables. Make sure you can connect to the database.
 migrations:
