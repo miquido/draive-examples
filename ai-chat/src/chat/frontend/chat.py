@@ -47,7 +47,7 @@ __all__ = [
 
 
 @password_auth_callback
-async def auth_callback(username: str, password: str):
+async def auth_callback(username: str, password: str) -> User | None:
     # TODO: temporary auth for using data layer
     if (username, password) == ("username", "password"):
         return User(identifier="username", display_name="Tester")

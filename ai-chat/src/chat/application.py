@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from chat.frontend import setup_frontend
 from chat.middlewares import ContextMiddleware
 from chat.routes import technical_router
-from integrations.postgres import PostgresConnectionPool, PostgresConnection
+from integrations.postgres import PostgresConnectionPool
 
 __all__ = [
     "app",
