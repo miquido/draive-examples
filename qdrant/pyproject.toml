@@ -1,49 +1,40 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
-name = "Example"
+name = "qdrant-example"
 version = "0.1.0"
-maintainers = [
-  {name = "Kacper Kaliński", email = "kacper.kalinski@miquido.com"}
-]
 requires-python = ">=3.12"
 dependencies = [
-    "draive[openai,anthropic,gemini,ollama,fastembed]~=0.37.0",
-    "beautifulsoup4",
-    "curl_cffi",
-    "pdfminer.six",
+    "draive[cohere]~=0.55.0",
+    "qdrant-client~=1.12",
 ]
 
 [project.urls]
 Homepage = "https://miquido.com"
 
 [project.optional-dependencies]
-chat = [
-    "Example",
-    "chainlit",
-]
 dev = [
-    "bandit",
-    "pyright",
-    "ruff",
+    "qdrant_example",
+    "bandit~=1.7",
+    "pyright~=1.1",
+    "ruff~=0.11",
 ]
+
+[tool.hatch.build]
+sources = ["./src"]
+packages = ["./src"]
 
 [tool.ruff]
 target-version = "py312"
 line-length = 100
 extend-exclude = [".venv", ".git", ".cache"]
 lint.select = ["E", "F", "A", "I", "B", "PL", "W", "C", "RUF", "UP"]
-lint.ignore = []
+lint.ignore = ["A005"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "E402"]
-"./tests/*.py" = ["PLR2004"]
-
-[tool.ruff.lint.flake8-bugbear]
-extend-immutable-calls = ["Argument", "draive.Argument"]
-
 
 [tool.pyright]
 pythonVersion = "3.12"
@@ -56,11 +47,12 @@ exclude = [
   "**/__pycache__",
 ]
 ignore = []
+stubPath = "./stubs"
 reportMissingImports = true
-reportMissingTypeStubs = true
-typeCheckingMode = "strict"
+reportMissingTypeStubs = false
 userFileIndexingLimit = -1
 useLibraryCodeForTypes = true
 
 [tool.pyright.analysis]
 diagnosticMode = "workspace"
+typeCheckingMode = "strict"
