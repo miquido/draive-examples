@@ -20,7 +20,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://miquido.com"
 
-[dependency-groups]
+[project.optional-dependencies]
 news = [
     "Example",
     "chainlit",

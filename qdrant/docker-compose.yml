@@ -1,0 +1,12 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.13.5
+    ports:
+      - ${QDRANT_PORT}:6334
+      - "6333:6333" # allow accessing console for local runs
+    restart: always
+    volumes:
+      - qdrant_data:/var/lib/qdrant/storage
+
+volumes:
+  qdrant_data:
