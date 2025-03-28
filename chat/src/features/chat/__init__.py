@@ -1,5 +1,5 @@
-from features.chat.respond import chat_respond
+from features.chat.conversation import chat_stream
 
 __all__ = [
-    "chat_respond",
+    "chat_stream",
 ]

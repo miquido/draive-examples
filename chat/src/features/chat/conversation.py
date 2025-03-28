@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 INSTRUCTION: str = """\
-You are a company assistant helping employees in their daily job.
+You are helpful assistant.
 
 Current time is {time}.
 """

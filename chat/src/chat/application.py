@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
 from logging import Logger, getLogger
 
+from chainlit.utils import mount_chainlit
 from draive import Disposables, setup_logging
 from draive.openai import OpenAI, OpenAIChatConfig
 from fastapi import FastAPI
 
-from chat.frontend import setup_frontend
 from chat.middlewares import ContextMiddleware
 from chat.routes import technical_router
 from integrations.postgres import PostgresConnectionPool
@@ -64,4 +64,8 @@ app.add_middleware(ContextMiddleware)
 app.include_router(technical_router)
 
 # chainlit
-setup_frontend(app=app)
+mount_chainlit(
+    app=app,
+    target="src/chat/frontend/chat.py",
+    path="",
+)

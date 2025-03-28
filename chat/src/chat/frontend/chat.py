@@ -22,7 +22,6 @@ from chainlit import (
     user_session,
 )
 from chainlit.types import ThreadDict
-from chainlit.utils import mount_chainlit
 from draive import (
     Conversation,
     ConversationMessage,
@@ -36,21 +35,22 @@ from draive import (
     asynchronous,
     ctx,
 )
-from fastapi import FastAPI
+from haiway.utils.env import getenv_str
 
 from features.chat import chat_stream
 from solutions.data_layer import PostgresDataLayer, normalized_image
 
-__all__ = [
-    "setup_frontend",
-]
-
 
 @password_auth_callback
-async def auth_callback(username: str, password: str) -> User | None:
-    # TODO: temporary auth for using data layer
-    if (username, password) == ("username", "password"):
-        return User(identifier="username", display_name="Tester")
+async def auth_callback(
+    username: str,
+    password: str,
+) -> User | None:
+    if (username, password) == ("username", getenv_str("CHAT_PASSWORD", required=True)):
+        return User(
+            identifier="username",
+            display_name="User",
+        )
 
     else:
         return None
@@ -102,13 +102,14 @@ async def handle_message(
     message: Message,
 ) -> None:
     try:
-        memory: Memory | None = user_session.get("memory")  # pyright: ignore
+        memory: Memory | None = user_session.get("memory")
         if memory is None:
-            memory = Memory.accumulative_volatile()  # pyright: ignore
-            user_session.set("memory", memory)  # pyright: ignore
+            memory = Memory.accumulative_volatile()
+            user_session.set("memory", memory)
+
         async with ctx.scope(
             "message",
-            Conversation(memory=memory),  # pyright: ignore
+            Conversation(memory=memory),
             metrics=MetricsLogger.handler(),
         ):
             response_message = Message(
@@ -181,7 +182,8 @@ def _element_content(
                 )
             )
 
-        case _:  # skip unknown through empty content
+        case other:  # skip unknown through empty content
+            ctx.log_error(f"Received unsupported content:\n{other}")
             return MultimodalContent.of()
 
 
@@ -238,7 +240,9 @@ def _as_message_content(  # noqa: C901, PLR0912
                                 result.append(Image(url=url))
 
                             case bytes() as data:
-                                raise NotImplementedError("Base64 content is not supported yet")
+                                result.append(
+                                    Image(url=f"data:{media.media};base64,{b64encode(data)}")
+                                )
 
                     case "audio":
                         match media.source:
@@ -246,7 +250,9 @@ def _as_message_content(  # noqa: C901, PLR0912
                                 result.append(Audio(url=url))
 
                             case bytes() as data:
-                                raise NotImplementedError("Base64 content is not supported yet")
+                                result.append(
+                                    Audio(url=f"data:{media.media};base64,{b64encode(data)}")
+                                )
 
                     case "video":
                         match media.source:
@@ -254,7 +260,9 @@ def _as_message_content(  # noqa: C901, PLR0912
                                 result.append(Video(url=url))
 
                             case bytes() as data:
-                                raise NotImplementedError("Base64 content is not supported yet")
+                                result.append(
+                                    Video(url=f"data:{media.media};base64,{b64encode(data)}")
+                                )
 
             case DataModel() as data:
                 result.append(CustomElement(props=data.as_dict()))
@@ -268,9 +276,9 @@ def setup_postgres() -> PostgresDataLayer:
     return PostgresDataLayer()
 
 
-def setup_frontend(app: FastAPI) -> None:
-    mount_chainlit(
-        app=app,
-        target="src/chat/frontend/chat.py",
-        path="",
-    )
+# def setup_frontend(app: FastAPI) -> None:
+#     mount_chainlit(
+#         app=app,
+#         target="src/chat/frontend/chat.py",
+#         path="",
+#     )
