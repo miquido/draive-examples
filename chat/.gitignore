@@ -86,6 +86,4 @@ embedding_models/
 ## Extra
 .files/
 logs.txt
-.chainlit
-chainlit.md
 test-reports

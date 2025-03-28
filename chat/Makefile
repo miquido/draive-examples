@@ -9,10 +9,10 @@ SOURCES_PATH := src
 -include .env
 
 ifndef UV_VERSION
-	UV_VERSION := 0.5.15
+	UV_VERSION := 0.6.10
 endif
 
-.PHONY: uv_check venv sync update format lint chat_run docker_run
+.PHONY: uv_check venv sync update format lint migrations chat docker_run sidekicks
 
 # Check installed UV version and install if needed
 uv_check:
@@ -77,10 +77,18 @@ lint:
 	@ruff check $(SOURCES_PATH)
 	@pyright --project ./
 
-# Run local development api server
-chat_run:
-	@chainlit run ./src/entrypoint/chat.py -w
+# Run postgres migrations and rabitmq setup using provided environment variables. Make sure you can connect to the database.
+migrations:
+	@python -B -m migrations
 
-# Run services locally using docker-compose.
+# Run local development chat server
+chat:
+	@python -B -m uvicorn $(SOURCES_PATH).chat:app --reload --host 0.0.0.0 --port $(CHAT_PORT)
+
+# Run all services locally using docker-compose.
 docker_run:
 	@docker compose up --force-recreate --build chat
+
+# Run all required services with docker except application.
+sidekicks:
+	@docker compose up postgres
