@@ -4,6 +4,7 @@ from typing import Any, cast
 
 from chainlit import (
     Audio,
+    ChatSettings,
     CustomElement,
     ErrorMessage,
     File,
@@ -15,26 +16,32 @@ from chainlit import (
     User,
     Video,
     data_layer,
-    on_chat_resume,  # type: ignore
-    on_message,  # type: ignore
-    password_auth_callback,  # type: ignore
-    set_starters,  # type: ignore
+    on_chat_resume,
+    on_chat_start,
+    on_message,
+    on_settings_update,
+    password_auth_callback,
+    set_starters,
     user_session,
 )
+from chainlit.input_widget import TextInput
 from chainlit.types import ThreadDict
 from draive import (
     Conversation,
     ConversationMessage,
     DataModel,
-    MediaContent,
+    MediaData,
+    MediaReference,
     Memory,
     MetricsLogger,
     MultimodalContent,
     ProcessingEvent,
+    State,
     TextContent,
     asynchronous,
     ctx,
 )
+from draive.mcp import MCPClient
 from haiway.utils.env import getenv_str
 
 from features.chat import chat_stream
@@ -59,6 +66,61 @@ async def auth_callback(
 @set_starters
 async def prepare_starters(user: Any) -> list[Starter]:
     return []
+
+
+@on_chat_start
+async def start() -> None:
+    await ChatSettings(
+        [
+            TextInput(
+                id="mcp_server",
+                label="MCP Server stdio run command or https address for SSE",
+                placeholder="npx -y @modelcontextprotocol/server-filesystem /local/path/",
+            ),
+        ]
+    ).send()
+    user_session.set("mcp_client", None)
+    user_session.set("mcp_state", ())
+
+
+@on_settings_update
+async def update_settings(settings: dict[str, Any]) -> None:
+    mcp_server: str | None = settings.get("mcp_server")
+    ctx.log_debug("Chat settings updated!")
+    if client := user_session.get("mcp_client"):
+        if client.identifier == mcp_server:
+            ctx.log_debug("Keeping current mcp client...")
+            return  # keep the same one
+
+        ctx.log_debug("Closing current mcp client...")
+        await client.__aclose__(None, None, None)
+
+    if mcp_server:
+        ctx.log_debug("...preparing new mcp client...")
+        mcp_server = mcp_server.strip()
+        mcp_client: MCPClient
+        if mcp_server.startswith("http"):
+            command_parts = mcp_server.split(" ")
+            mcp_client = MCPClient.sse(
+                identifier=mcp_server,
+                url=mcp_server,
+            )
+
+        else:
+            command_parts = mcp_server.split(" ")
+            mcp_client = MCPClient.stdio(
+                identifier=mcp_server,
+                command=command_parts[0],
+                args=command_parts[1:],
+            )
+
+        user_session.set("mcp_client", mcp_client)
+        user_session.set("mcp_state", await mcp_client.__aenter__())
+
+    else:
+        ctx.log_debug("...removing mcp client...")
+        user_session.set("mcp_client", None)
+        user_session.set("mcp_state", ())
 
 
 @on_chat_resume
@@ -102,6 +164,7 @@ async def handle_message(
     message: Message,
 ) -> None:
     try:
+        mcp_state: Sequence[State] = user_session.get("mcp_state", ())  # pyright: ignore[reportAssignmentType]
         memory: Memory | None = user_session.get("memory")
         if memory is None:
             memory = Memory.accumulative_volatile()
@@ -109,6 +172,7 @@ async def handle_message(
 
         async with ctx.scope(
             "message",
+            *mcp_state,
             Conversation(memory=memory),
             metrics=MetricsLogger.handler(),
         ):
@@ -176,7 +240,7 @@ def _element_content(
             "url": str() as url,
         } if url.startswith("data"):
             return MultimodalContent.of(
-                MediaContent.base64(
+                MediaData.of(
                     url.removeprefix(f"data:{mime};base64,"),
                     media=cast(Any, mime),
                 )
@@ -200,7 +264,7 @@ async def _as_multimodal_content(
             case Image() as image:
                 if url := image.url:
                     parts.append(
-                        MediaContent.url(
+                        MediaReference.of(
                             url,
                             media="image",
                         )
@@ -208,7 +272,7 @@ async def _as_multimodal_content(
 
                 elif path := image.path:
                     parts.append(
-                        MediaContent.base64(
+                        MediaData.of(
                             await _load_image_b64(path),
                             media="image/png",
                         )
@@ -223,7 +287,7 @@ async def _as_multimodal_content(
     return MultimodalContent.of(*parts)
 
 
-def _as_message_content(  # noqa: C901, PLR0912
+def _as_message_content(  # noqa: C901
     content: MultimodalContent,
 ) -> list[Text | Image | Audio | Video | CustomElement]:
     result: list[Text | Image | Audio | Video | CustomElement] = []
@@ -232,37 +296,39 @@ def _as_message_content(  # noqa: C901, PLR0912
             case TextContent() as text:
                 result.append(Text(content=text.text))
 
-            case MediaContent() as media:
-                match media.kind:
+            case MediaData() as media_data:
+                match media_data.kind:
                     case "image":
-                        match media.source:
-                            case str() as url:
-                                result.append(Image(url=url))
-
-                            case bytes() as data:
-                                result.append(
-                                    Image(url=f"data:{media.media};base64,{b64encode(data)}")
-                                )
+                        result.append(
+                            Image(
+                                url=f"data:{media_data.media};base64,{b64encode(media_data.data)}"
+                            )
+                        )
 
                     case "audio":
-                        match media.source:
-                            case str() as url:
-                                result.append(Audio(url=url))
-
-                            case bytes() as data:
-                                result.append(
-                                    Audio(url=f"data:{media.media};base64,{b64encode(data)}")
-                                )
+                        result.append(
+                            Audio(
+                                url=f"data:{media_data.media};base64,{b64encode(media_data.data)}"
+                            )
+                        )
 
                     case "video":
-                        match media.source:
-                            case str() as url:
-                                result.append(Video(url=url))
+                        result.append(
+                            Video(
+                                url=f"data:{media_data.media};base64,{b64encode(media_data.data)}"
+                            )
+                        )
 
-                            case bytes() as data:
-                                result.append(
-                                    Video(url=f"data:{media.media};base64,{b64encode(data)}")
-                                )
+            case MediaReference() as media_reference:
+                match media_reference.kind:
+                    case "image":
+                        result.append(Image(url=media_reference.uri))
+
+                    case "audio":
+                        result.append(Audio(url=media_reference.uri))
+
+                    case "video":
+                        result.append(Video(url=media_reference.uri))
 
             case DataModel() as data:
                 result.append(CustomElement(props=data.as_dict()))
@@ -274,11 +340,3 @@ def _as_message_content(  # noqa: C901, PLR0912
 def setup_postgres() -> PostgresDataLayer:
     # setup chainlit data layer - https://docs.chainlit.io/data-persistence/custom
     return PostgresDataLayer()
-
-
-# def setup_frontend(app: FastAPI) -> None:
-#     mount_chainlit(
-#         app=app,
-#         target="src/chat/frontend/chat.py",
-#         path="",
-#     )
