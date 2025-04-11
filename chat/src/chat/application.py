@@ -26,19 +26,14 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Starting server...")
 
-    openai = OpenAI()
     disposables = Disposables(
-        openai,
+        OpenAI(),
         PostgresConnectionPool(),
     )
     async with disposables as state:
         app.extra["state"] = (
-            *state,
-            openai.lmm_invoking(),
-            openai.lmm_streaming(),
-            openai.text_embedding(),
-            openai.tokenizer("gpt-4o"),
             OpenAIChatConfig(model="gpt-4o"),
+            *state,
         )
 
         logger.info("...server started...")
@@ -67,5 +62,5 @@ app.include_router(technical_router)
 mount_chainlit(
     app=app,
     target="src/chat/frontend/chat.py",
-    path="",
+    path="/",
 )
