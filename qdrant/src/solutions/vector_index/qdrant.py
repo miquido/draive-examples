@@ -6,13 +6,13 @@ from draive import (
     AttributeRequirement,
     DataModel,
     Embedded,
+    ImageEmbedding,
     MediaContent,
+    MediaData,
+    MediaReference,
     TextContent,
+    TextEmbedding,
     VectorIndex,
-    embed_image,
-    embed_images,
-    embed_text,
-    embed_texts,
     mmr_vector_similarity_search,
 )
 
@@ -51,24 +51,25 @@ def QdrantVectorIndex() -> VectorIndex:  # noqa: C901, PLR0915
                 case TextContent() as text_content:
                     selected_values.append(text_content.text)
 
-                case MediaContent() as media_content:
-                    if media_content.kind != "image":
-                        raise ValueError(f"{media_content.kind} embedding is not supported")
+                case MediaData() as media_data:
+                    if media_data.kind != "image":
+                        raise ValueError(f"{media_data.kind} embedding is not supported")
 
-                    if not isinstance(media_content.source, bytes):
-                        raise ValueError("Media references are not supported")
+                    selected_values.append(media_data.data)
 
-                    selected_values.append(media_content.source)
+                case MediaReference():
+                    # we could download items for embedding if needed
+                    raise ValueError("MediaReference is not supported")
 
         embedded_values: Sequence[Embedded[str] | Embedded[bytes]]
         if all(isinstance(value, str) for value in selected_values):
-            embedded_values = await embed_texts(
+            embedded_values = await TextEmbedding.embed(
                 cast(list[str], selected_values),
                 **extra,
             )
 
         elif all(value for value in selected_values):
-            embedded_values = await embed_images(
+            embedded_values = await ImageEmbedding.embed(
                 cast(list[bytes], selected_values),
                 **extra,
             )
@@ -113,25 +114,26 @@ def QdrantVectorIndex() -> VectorIndex:  # noqa: C901, PLR0915
                 return results.results
 
             case str() as text:
-                embedded_query: Embedded[str] = await embed_text(text)
+                embedded_query: Embedded[str] = await TextEmbedding.embed(text)
                 query_vector = embedded_query.vector
 
             case TextContent() as text_content:
-                embedded_query: Embedded[str] = await embed_text(text_content.text)
+                embedded_query: Embedded[str] = await TextEmbedding.embed(text_content.text)
                 query_vector = embedded_query.vector
 
-            case MediaContent() as media_content:
-                if media_content.kind != "image":
-                    raise ValueError(f"{media_content.kind} embedding is not supported")
+            case MediaData() as media_data:
+                if media_data.kind != "image":
+                    raise ValueError(f"{media_data.kind} embedding is not supported")
 
-                if not isinstance(media_content.source, bytes):
-                    raise ValueError("Media references are not supported")
-
-                embedded_image: Embedded[bytes] = await embed_image(
-                    media_content.source,
+                embedded_image: Embedded[bytes] = await ImageEmbedding.embed(
+                    media_data.data,
                     **extra,
                 )
                 query_vector = embedded_image.vector
+
+            case MediaReference():
+                # we could download items for embedding if needed
+                raise ValueError("MediaReference is not supported")
 
             case vector:
                 query_vector = vector

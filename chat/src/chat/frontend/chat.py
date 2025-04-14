@@ -16,6 +16,7 @@ from chainlit import (
     User,
     Video,
     data_layer,
+    on_chat_end,
     on_chat_resume,
     on_chat_start,
     on_message,
@@ -70,6 +71,7 @@ async def prepare_starters(user: Any) -> list[Starter]:
 
 @on_chat_start
 async def start() -> None:
+    ctx.log_debug("Starting chat session...")
     await ChatSettings(
         [
             TextInput(
@@ -83,6 +85,14 @@ async def start() -> None:
     user_session.set("mcp_state", ())
 
 
+@on_chat_end
+async def end() -> None:
+    ctx.log_debug("...closing chat session...")
+    if client := user_session.get("mcp_client"):
+        ctx.log_debug("...closing mcp client...")
+        await client.__aexit__(None, None, None)
+
+
 @on_settings_update
 async def update_settings(settings: dict[str, Any]) -> None:
     mcp_server: str | None = settings.get("mcp_server")
@@ -93,7 +103,7 @@ async def update_settings(settings: dict[str, Any]) -> None:
             return  # keep the same one
 
         ctx.log_debug("Closing current mcp client...")
-        await client.__aclose__(None, None, None)
+        await client.__aexit__(None, None, None)
 
     if mcp_server:
         ctx.log_debug("...preparing new mcp client...")
