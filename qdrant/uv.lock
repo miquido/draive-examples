@@ -90,7 +90,7 @@ wheels = [
 
 [[package]]
 name = "cohere"
-version = "5.14.2"
+version = "5.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastavro" },
@@ -103,9 +103,9 @@ dependencies = [
     { name = "types-requests" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c3/80/3943edee51d24c6cac2ef269f1363dfd6e8f3d45e2661fcf40b67d6c4292/cohere-5.14.2.tar.gz", hash = "sha256:5aaf5a70e619ade2bb991b12f573fd4cc9bd1f3097f0f67acd973d060a7e86c6", size = 134626 }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/33/69c7d1b25a20eafef4197a1444c7f87d5241e936194e54876ea8996157e6/cohere-5.15.0.tar.gz", hash = "sha256:e802d4718ddb0bb655654382ebbce002756a3800faac30296cde7f1bdc6ff2cc", size = 135021 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/f3/2b11b4ea8c2e91e3b6fd965e80c123e469d7cae037d2afbb6534efe75180/cohere-5.14.2-py3-none-any.whl", hash = "sha256:fe2cbbf6c79fba21a66731d387647b981ab5ea6dbcfb09beb85386e96695bd64", size = 259249 },
+    { url = "https://files.pythonhosted.org/packages/c7/87/94694db7fe6df979fbc03286eaabdfa98f1c8fa532960e5afdf965e10960/cohere-5.15.0-py3-none-any.whl", hash = "sha256:22ff867c2a6f2fc2b585360c6072f584f11f275ef6d9242bac24e0fa2df1dfb5", size = 259522 },
 ]
 
 [[package]]
@@ -119,15 +119,15 @@ wheels = [
 
 [[package]]
 name = "draive"
-version = "0.57.2"
+version = "0.59.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "haiway" },
     { name = "numpy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/eb/47/be7c507970f70fea0b6c16aa6af3b28eaf31d476bd4fa42d4a41d4fb6c35/draive-0.57.2.tar.gz", hash = "sha256:8cbd3ee152d1421a640a18d04247767c3d0fedaf93ac79f4331840d218d4d043", size = 2968841 }
+sdist = { url = "https://files.pythonhosted.org/packages/eb/ec/197256917171f9e2cdffda51e4d5a5630f70239c65687217c5a2fb27a8a1/draive-0.59.1.tar.gz", hash = "sha256:5fa25d55d80856f829021867edde0121dd758e70e153e7fffcd66a8776717d9e", size = 2969689 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b7/e2/51c339c387dce3e3bf104150193f8b48191398d1e65042c3e698e7189aa7/draive-0.57.2-py3-none-any.whl", hash = "sha256:f114e853f7c377f99aad92a2445d1d59d22ab6675843d1b3f2e33ceb5c0ce3b9", size = 2979515 },
+    { url = "https://files.pythonhosted.org/packages/2c/6e/69286d4b9e57902017d0b62ff6ba70fc55582a53073389d893697ec0bb0d/draive-0.59.1-py3-none-any.whl", hash = "sha256:284435d9dcd095168c85ff8e4540d793e9ad508cf31a19f3a6c4f5062e070ce5", size = 2979913 },
 ]
 
 [package.optional-dependencies]
@@ -258,11 +258,11 @@ wheels = [
 
 [[package]]
 name = "haiway"
-version = "0.15.2"
+version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/68/e1/768a3e28908ef065d54ea0d0f0e55d0b468e5f8506d3c75f43ceaa3ecf20/haiway-0.15.2.tar.gz", hash = "sha256:79f803fc7cb24988d53c756b2e24ac8b48ad9314f542b55db1e377315bd48d02", size = 88177 }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/b4/34aca611f92f9f7aa54f268e393a6c989f256d4da0c130a937711e78603b/haiway-0.16.0.tar.gz", hash = "sha256:271ad0afa56fc8ccbdace07f76a2058b3d215c88aa221f5be8d8df8a55e2f4b5", size = 88187 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/43/3f/0322cc8d517a86852d387461963e4c22c1a63d40ac9a2e4822ad63a0c2bf/haiway-0.15.2-py3-none-any.whl", hash = "sha256:f0fa5f0cf492981aecc11f047d8ccebb9fdba040ef7e8f379764212ede16ab80", size = 52492 },
+    { url = "https://files.pythonhosted.org/packages/48/4c/66d5d27457a624dd31ece27fdcbcde3de6b099cd69ba96e2b83c8d53a220/haiway-0.16.0-py3-none-any.whl", hash = "sha256:e970b54cc68e611e7ba24480e7857458d6ecb1bbcada09812b4e52c91936a279", size = 52516 },
 ]
 
 [[package]]
@@ -625,7 +625,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "bandit", marker = "extra == 'dev'", specifier = "~=1.7" },
-    { name = "draive", extras = ["cohere"], specifier = "~=0.57.2" },
+    { name = "draive", extras = ["cohere"], specifier = "~=0.59.1" },
     { name = "pyright", marker = "extra == 'dev'", specifier = "~=1.1" },
     { name = "qdrant-client", specifier = "~=1.12" },
     { name = "qdrant-example", marker = "extra == 'dev'" },

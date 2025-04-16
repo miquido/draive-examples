@@ -9,7 +9,7 @@ SOURCES_PATH := src
 -include .env
 
 ifndef UV_VERSION
-	UV_VERSION := 0.6.10
+	UV_VERSION := 0.6.14
 endif
 
 .PHONY: uv_check venv sync lock update format lint migrations example sidekicks
@@ -52,7 +52,7 @@ venv: uv_check
 	@echo '...preparing git hooks...'
 	@cp -n ./config/pre-push ./.git/hooks/pre-push || :
 	@echo '...preparing venv...'
-	@uv sync --all-groups --all-extras --frozen --reinstall
+	@uv sync --all-groups --all-extras --frozen --reinstall --managed-python
 	@echo '...development environment ready! Activate venv using `. ./.venv/bin/activate`.'
 
 # Sync environment with uv based on constraints

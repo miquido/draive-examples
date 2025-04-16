@@ -7,7 +7,7 @@ name = "qdrant-example"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "draive[cohere]~=0.57.2",
+    "draive[cohere]~=0.59.1",
     "qdrant-client~=1.12",
 ]
 
