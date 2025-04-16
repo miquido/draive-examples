@@ -28,6 +28,8 @@ from chainlit import (
 from chainlit.input_widget import TextInput
 from chainlit.types import ThreadDict
 from draive import (
+    AccumulativeVolatileMemory,
+    ContentGuardrailsException,
     Conversation,
     ConversationMessage,
     DataModel,
@@ -139,7 +141,7 @@ async def resume_chat(
 ) -> None:
     try:
         memory: Memory[Sequence[ConversationMessage], ConversationMessage] = (
-            Memory.accumulative_volatile()
+            AccumulativeVolatileMemory()
         )
         for message in thread["steps"]:
             match message:
@@ -177,7 +179,7 @@ async def handle_message(
         mcp_state: Sequence[State] = user_session.get("mcp_state", ())  # pyright: ignore[reportAssignmentType]
         memory: Memory | None = user_session.get("memory")
         if memory is None:
-            memory = Memory.accumulative_volatile()
+            memory = AccumulativeVolatileMemory()
             user_session.set("memory", memory)
 
         async with ctx.scope(
@@ -216,6 +218,18 @@ async def handle_message(
                                     await response_message.update()
 
             await response_message.send()  # end streaming
+
+    except ContentGuardrailsException as exc:
+        ctx.log_error(
+            "Guardrails exception",
+            exception=exc,
+        )
+        await ErrorMessage(
+            author="error",
+            content=exc.replacement.as_string()
+            if exc.replacement is not None
+            else f"Guardrails issue: {','.join(exc.violations)}",
+        ).send()
 
     except Exception as exc:
         ctx.log_error(

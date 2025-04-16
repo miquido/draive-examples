@@ -51,7 +51,7 @@ venv: uv_check
 	@echo '...preparing git hooks...'
 	@cp -n ./config/pre-push ./.git/hooks/pre-push || :
 	@echo '...preparing venv...'
-	@uv sync --all-groups --all-extras --frozen --reinstall
+	@uv sync --all-groups --all-extras --frozen --reinstall --managed-python
 	@echo '...development environment ready! Activate venv using `. ./.venv/bin/activate`.'
 
 # Sync environment with uv based on constraints

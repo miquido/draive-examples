@@ -7,7 +7,7 @@ name = "ChainlitChat"
 version = "1.0.0"
 requires-python = ">=3.12"
 dependencies = [
-  "draive[openai]~=0.57.2",
+  "draive[openai]~=0.59.1",
   "httpx~=0.28",
   "asyncpg~=0.30",
 ]
