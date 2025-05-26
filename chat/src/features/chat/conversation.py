@@ -20,6 +20,6 @@ async def chat_stream(
     return await Conversation.completion(
         instruction=INSTRUCTION.format(time=datetime.now().isoformat()),
         input=message,
-        tools=await Toolbox.external(),
+        tools=await Toolbox.fetched(),
         stream=True,
     )

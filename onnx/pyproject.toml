@@ -6,22 +6,13 @@ build-backend = "hatchling.build"
 name = "onnx-example"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = [
-    "draive~=0.60.0",
-    "onnxruntime~=1.21.1",
-    "tokenizers~=0.21.1",
-]
+dependencies = ["draive~=0.65.2", "onnxruntime~=1.21.1", "tokenizers~=0.21.1"]
 
 [project.urls]
 Homepage = "https://miquido.com"
 
 [project.optional-dependencies]
-dev = [
-    "onnx_example",
-    "bandit~=1.7",
-    "pyright~=1.1",
-    "ruff~=0.11",
-]
+dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.11"]
 
 [tool.hatch.build]
 sources = ["./src"]
@@ -40,13 +31,8 @@ lint.ignore = ["A005"]
 [tool.pyright]
 pythonVersion = "3.12"
 venvPath = "./.venv"
-include = [
-  "./src",
-]
-exclude = [
-  "**/node_modules",
-  "**/__pycache__",
-]
+include = ["./src"]
+exclude = ["**/node_modules", "**/__pycache__"]
 ignore = []
 stubPath = "./stubs"
 reportMissingImports = true

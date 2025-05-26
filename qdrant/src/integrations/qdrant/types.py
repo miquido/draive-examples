@@ -47,7 +47,7 @@ class QdrantResult[Content: DataModel](State):
             identifier=identifier,
             vector=_flat_vector(data.vector),
             score=data.score,
-            content=content.from_dict(data.payload),
+            content=content.from_mapping(data.payload),
         )
 
 

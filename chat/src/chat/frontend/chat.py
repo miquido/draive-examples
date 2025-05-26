@@ -29,23 +29,23 @@ from chainlit.input_widget import TextInput
 from chainlit.types import ThreadDict
 from draive import (
     AccumulativeVolatileMemory,
-    ContentGuardrailsException,
     Conversation,
     ConversationMessage,
     DataModel,
+    GuardrailsModerationException,
     MediaData,
     MediaReference,
     Memory,
-    MetricsLogger,
     MultimodalContent,
     ProcessingEvent,
     State,
     TextContent,
+    as_dict,
     asynchronous,
     ctx,
 )
 from draive.mcp import MCPClient
-from haiway.utils.env import getenv_str
+from haiway import LoggerObservability, getenv_str
 
 from features.chat import chat_stream
 from solutions.data_layer import PostgresDataLayer, normalized_image
@@ -186,7 +186,7 @@ async def handle_message(
             "message",
             *mcp_state,
             Conversation(memory=memory),
-            metrics=MetricsLogger.handler(),
+            observability=LoggerObservability(),
         ):
             response_message = Message(
                 author="assistant",
@@ -219,14 +219,14 @@ async def handle_message(
 
             await response_message.send()  # end streaming
 
-    except ContentGuardrailsException as exc:
+    except GuardrailsModerationException as exc:
         ctx.log_error(
             "Guardrails exception",
             exception=exc,
         )
         await ErrorMessage(
             author="error",
-            content=exc.replacement.as_string()
+            content=exc.replacement.to_str()
             if exc.replacement is not None
             else f"Guardrails issue: {','.join(exc.violations)}",
         ).send()
@@ -355,7 +355,7 @@ def _as_message_content(  # noqa: C901
                         result.append(Video(url=media_reference.uri))
 
             case DataModel() as data:
-                result.append(CustomElement(props=data.as_dict()))
+                result.append(CustomElement(props=as_dict(data.to_mapping())))
 
     return result
 

@@ -6,21 +6,13 @@ build-backend = "hatchling.build"
 name = "qdrant-example"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = [
-    "draive[cohere]~=0.59.1",
-    "qdrant-client~=1.12",
-]
+dependencies = ["draive[cohere]~=0.65.2", "qdrant-client~=1.12"]
 
 [project.urls]
 Homepage = "https://miquido.com"
 
 [project.optional-dependencies]
-dev = [
-    "qdrant_example",
-    "bandit~=1.7",
-    "pyright~=1.1",
-    "ruff~=0.11",
-]
+dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.11"]
 
 [tool.hatch.build]
 sources = ["./src"]
@@ -39,13 +31,8 @@ lint.ignore = ["A005"]
 [tool.pyright]
 pythonVersion = "3.12"
 venvPath = "./.venv"
-include = [
-  "./src",
-]
-exclude = [
-  "**/node_modules",
-  "**/__pycache__",
-]
+include = ["./src"]
+exclude = ["**/node_modules", "**/__pycache__"]
 ignore = []
 stubPath = "./stubs"
 reportMissingImports = true

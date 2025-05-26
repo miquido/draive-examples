@@ -9,7 +9,7 @@ SOURCES_PATH := src
 -include .env
 
 ifndef UV_VERSION
-	UV_VERSION := 0.6.14
+	UV_VERSION := 0.7.8
 endif
 
 .PHONY: uv_check venv sync lock update format lint migrations example sidekicks

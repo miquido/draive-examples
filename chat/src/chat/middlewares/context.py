@@ -42,7 +42,7 @@ class ContextMiddleware:
         async with ctx.scope(
             f"WS {scope["path"]}",
             *scope["app"].extra.get("state", ()),
-            logger=getLogger("server"),
+            observability=getLogger("server"),
         ):
             try:
                 return await self.app(
@@ -81,7 +81,7 @@ class ContextMiddleware:
         async with ctx.scope(
             f"{scope.get("method", "")} {scope["path"]}",
             *scope["app"].extra.get("state", ()),
-            logger=getLogger("server"),
+            observability=getLogger("server"),
         ) as trace_id:
 
             async def traced_send(message: Message) -> None:

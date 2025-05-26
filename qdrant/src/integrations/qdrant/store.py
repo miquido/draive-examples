@@ -2,7 +2,7 @@ from collections.abc import Iterable, Sequence
 from typing import cast
 from uuid import uuid4
 
-from draive import AttributeRequirement, DataModel, Embedded, as_list
+from draive import AttributeRequirement, DataModel, Embedded, as_dict, as_list
 from qdrant_client.models import (
     CollectionsResponse,
     Distance,
@@ -86,7 +86,7 @@ class QdrantStoreMixin(QdrantSession):
             return QdrantPaginationResult[Embedded[model]](
                 results=[
                     Embedded[model](
-                        value=model.from_dict(record.payload),
+                        value=model.from_mapping(record.payload),
                         # we ar using only a single vector
                         vector=cast(list[float], record.vector),
                     )
@@ -99,7 +99,7 @@ class QdrantStoreMixin(QdrantSession):
         else:
             return QdrantPaginationResult[model](
                 results=[
-                    model.from_dict(record.payload)
+                    model.from_mapping(record.payload)
                     for record in records
                     if record.payload is not None
                 ],
@@ -121,7 +121,7 @@ class QdrantStoreMixin(QdrantSession):
             points=[
                 PointStruct(
                     id=uuid4().hex,
-                    payload=element.value.as_dict(),
+                    payload=as_dict(element.value.to_mapping()),
                     vector=as_list(element.vector),
                 )
                 for element in objects

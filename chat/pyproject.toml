@@ -6,23 +6,11 @@ build-backend = "setuptools.build_meta"
 name = "ChainlitChat"
 version = "1.0.0"
 requires-python = ">=3.12"
-dependencies = [
-  "draive[openai]~=0.59.1",
-  "httpx~=0.28",
-  "asyncpg~=0.30",
-]
+dependencies = ["draive[openai]~=0.65.2", "httpx~=0.28", "asyncpg~=0.30"]
 
 [dependency-groups]
-chat = [
-  "ChainlitChat",
-  "chainlit~=2.0",
-  "starlette~=0.41",
-  "fastapi~=0.115",
-  "pillow~=11.0",
-]
-migrations = [
-  "ChainlitChat",
-]
+chat = ["chainlit~=2.0", "starlette~=0.41", "fastapi~=0.115", "pillow~=11.0"]
+migrations = []
 dev = [
   "bandit~=1.7",
   "pyright~=1.1",
@@ -34,11 +22,7 @@ dev = [
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-extend-exclude = [
-  ".venv",
-  ".git",
-  ".cache",
-]
+extend-exclude = [".venv", ".git", ".cache"]
 lint.select = ["E", "F", "A", "I", "B", "PL", "W", "C", "RUF", "UP"]
 lint.ignore = ["A005"]
 
