@@ -1,7 +1,12 @@
 from collections.abc import AsyncIterator
 from datetime import datetime
 
-from draive import Conversation, ConversationMessage, LMMStreamChunk, ProcessingEvent, Toolbox
+from draive import (
+    Conversation,
+    ConversationMessage,
+    ConversationStreamElement,
+    Toolbox,
+)
 
 __all__ = [
     "chat_stream",
@@ -16,7 +21,7 @@ Current time is {time}.
 
 async def chat_stream(
     message: ConversationMessage,
-) -> AsyncIterator[LMMStreamChunk | ProcessingEvent]:
+) -> AsyncIterator[ConversationStreamElement]:
     return await Conversation.completion(
         instruction=INSTRUCTION.format(time=datetime.now().isoformat()),
         input=message,

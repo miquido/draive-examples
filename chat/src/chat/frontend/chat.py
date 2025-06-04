@@ -30,6 +30,7 @@ from chainlit.types import ThreadDict
 from draive import (
     AccumulativeVolatileMemory,
     Conversation,
+    ConversationEvent,
     ConversationMessage,
     DataModel,
     GuardrailsModerationException,
@@ -37,7 +38,6 @@ from draive import (
     MediaReference,
     Memory,
     MultimodalContent,
-    ProcessingEvent,
     State,
     TextContent,
     as_dict,
@@ -200,7 +200,7 @@ async def handle_message(
                 ),
             ):
                 match chunk:
-                    case ProcessingEvent():
+                    case ConversationEvent():
                         pass  # we are not supporting events yet
 
                     case chunk:
