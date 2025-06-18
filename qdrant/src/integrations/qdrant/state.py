@@ -1,11 +1,12 @@
 from collections.abc import Iterable, Sequence
 from typing import Literal, overload
 
-from draive import AttributeRequirement, DataModel, Embedded, State, ctx
+from draive import AttributePath, AttributeRequirement, DataModel, Embedded, State, ctx
 
 from integrations.qdrant.types import (
     QdrantCollectionCreating,
     QdrantCollectionDeleting,
+    QdrantCollectionIndexCreating,
     QdrantDeleting,
     QdrantFetching,
     QdrantPaginationResult,
@@ -45,6 +46,30 @@ class Qdrant(State):
         /,
     ) -> None:
         return await ctx.state(cls).collection_deleting(model)
+
+    @classmethod
+    async def create_index[Model: DataModel, Attribute](
+        cls,
+        model: type[Model],
+        /,
+        *,
+        path: AttributePath[Model, Attribute] | Attribute,
+        index_type: Literal[
+            "keyword",
+            "integer",
+            "float",
+            "geo",
+            "text",
+            "bool",
+            "datetime",
+            "uuid",
+        ],
+    ) -> bool:
+        return await ctx.state(cls).collection_index_creating(
+            model,
+            path=path,
+            index_type=index_type,
+        )
 
     @overload
     @classmethod
@@ -171,6 +196,7 @@ class Qdrant(State):
 
     collection_creating: QdrantCollectionCreating
     collection_deleting: QdrantCollectionDeleting
+    collection_index_creating: QdrantCollectionIndexCreating
     fetching: QdrantFetching
     searching: QdrantSearching
     storing: QdrantStoring

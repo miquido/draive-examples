@@ -1,3 +1,4 @@
+import traceback
 from logging import getLogger
 
 from haiway import ctx
@@ -61,8 +62,6 @@ class ContextMiddleware:
                 )
 
                 if __debug__:
-                    import traceback
-
                     error_message = error_message + f"\n{traceback.format_exc()}"
 
                 ctx.log_error(error_message)
@@ -118,8 +117,6 @@ class ContextMiddleware:
                 )
 
                 if __debug__:
-                    import traceback
-
                     error_message = error_message + f"\n{traceback.format_exc()}"
 
                 ctx.log_error(error_message)

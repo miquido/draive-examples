@@ -1,5 +1,5 @@
 from draive import AttributeRequirement, DataModel
-from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
+from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchText, MatchValue
 
 __all__ = [
     "prepare_filter",
@@ -16,7 +16,7 @@ def prepare_filter[Model: DataModel](
         return None
 
 
-def _convert[Model: DataModel](
+def _convert[Model: DataModel](  # noqa: PLR0911
     requirements: AttributeRequirement[Model],
     /,
 ) -> Filter:
@@ -27,6 +27,16 @@ def _convert[Model: DataModel](
                     FieldCondition(
                         key=str(requirements.lhs),
                         match=MatchValue(value=requirements.rhs),
+                    )
+                ]
+            )
+
+        case "text_match":
+            return Filter(
+                must=[
+                    FieldCondition(
+                        key=str(requirements.lhs),
+                        match=MatchText(text=requirements.rhs),
                     )
                 ]
             )

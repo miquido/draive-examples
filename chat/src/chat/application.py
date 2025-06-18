@@ -1,8 +1,9 @@
+from collections.abc import Iterable
 from contextlib import asynccontextmanager
 from logging import Logger, getLogger
 
 from chainlit.utils import mount_chainlit
-from draive import Disposables, setup_logging
+from draive import Disposables, State, setup_logging
 from draive.openai import OpenAI, OpenAIChatConfig
 from fastapi import FastAPI
 
@@ -26,18 +27,22 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Starting server...")
 
-    disposables = Disposables(
+    disposables: Disposables = Disposables(
         OpenAI(),
         PostgresConnectionPool(),
     )
-    async with disposables as state:
-        app.extra["state"] = (
-            OpenAIChatConfig(model="gpt-4o"),
-            *state,
-        )
+    state: Iterable[State] = await disposables.prepare()
+    app.extra["state"] = (
+        *state,
+        OpenAIChatConfig(model="gpt-4o"),
+    )
 
-        logger.info("...server started...")
+    logger.info("...server started...")
+    try:
         yield  # suspend until server shutdown
+
+    finally:
+        await disposables.dispose()
 
     logger.info("...server shutdown!")
 

@@ -18,10 +18,11 @@ class QdrantClient(
     QdrantSession,
 ):
     async def __aenter__(self) -> Qdrant:
-        await self._open_client()
+        await self._open_session()
         return Qdrant(
             collection_creating=self.create_collection,
             collection_deleting=self.delete_collection,
+            collection_index_creating=self.create_index,
             storing=self.store,
             fetching=self.fetch,
             searching=self.search,
@@ -34,4 +35,4 @@ class QdrantClient(
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        await self._close_client()
+        await self._close_session()

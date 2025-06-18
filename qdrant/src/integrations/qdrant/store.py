@@ -1,13 +1,14 @@
 from collections.abc import Iterable, Sequence
-from typing import cast
+from typing import Literal, cast
 from uuid import uuid4
 
-from draive import AttributeRequirement, DataModel, Embedded, as_dict, as_list
+from draive import AttributePath, AttributeRequirement, DataModel, Embedded, as_list
 from qdrant_client.models import (
     CollectionsResponse,
     Distance,
     Filter,
     FilterSelector,
+    PayloadSchemaType,
     PointStruct,
     VectorParams,
 )
@@ -47,6 +48,33 @@ class QdrantStoreMixin(QdrantSession):
             ),
             on_disk_payload=not in_ram,
         )
+
+    async def create_index[Model: DataModel, Attribute](
+        self,
+        model: type[Model],
+        /,
+        *,
+        path: AttributePath[Model, Attribute] | Attribute,
+        index_type: Literal[
+            "keyword",
+            "integer",
+            "float",
+            "geo",
+            "text",
+            "bool",
+            "datetime",
+            "uuid",
+        ],
+    ) -> bool:
+        if not await self._client.collection_exists(collection_name=model.__name__):
+            return False
+
+        await self._client.create_payload_index(
+            collection_name=model.__name__,
+            field_name=str(path),
+            field_type=PayloadSchemaType(index_type),
+        )
+        return True
 
     async def delete_collection[Model: DataModel](
         self,
@@ -121,7 +149,7 @@ class QdrantStoreMixin(QdrantSession):
             points=[
                 PointStruct(
                     id=uuid4().hex,
-                    payload=as_dict(element.value.to_mapping()),
+                    payload=dict(element.value.to_mapping()),
                     vector=as_list(element.vector),
                 )
                 for element in objects

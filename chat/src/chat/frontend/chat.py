@@ -29,7 +29,6 @@ from chainlit.input_widget import TextInput
 from chainlit.types import ThreadDict
 from draive import (
     AccumulativeVolatileMemory,
-    Conversation,
     ConversationEvent,
     ConversationMessage,
     DataModel,
@@ -185,7 +184,6 @@ async def handle_message(
         async with ctx.scope(
             "message",
             *mcp_state,
-            Conversation(memory=memory),
             observability=LoggerObservability(),
         ):
             response_message = Message(
@@ -198,6 +196,7 @@ async def handle_message(
                     content=message.content,
                     elements=message.elements,  # pyright: ignore[reportArgumentType]
                 ),
+                memory=memory,
             ):
                 match chunk:
                     case ConversationEvent():

@@ -1,13 +1,14 @@
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Protocol, Self, runtime_checkable
+from typing import Any, Literal, Protocol, Self, runtime_checkable
 from uuid import UUID
 
-from draive import AttributeRequirement, DataModel, Embedded, State
+from draive import AttributePath, AttributeRequirement, DataModel, Embedded, State
 from qdrant_client.conversions.common_types import ScoredPoint
 
 __all__ = [
     "QdrantCollectionCreating",
     "QdrantCollectionDeleting",
+    "QdrantCollectionIndexCreating",
     "QdrantDeleting",
     "QdrantException",
     "QdrantFetching",
@@ -90,6 +91,27 @@ class QdrantCollectionCreating(Protocol):
         vector_size: int,
         in_ram: bool,
         skip_existing: bool,
+    ) -> bool: ...
+
+
+@runtime_checkable
+class QdrantCollectionIndexCreating(Protocol):
+    async def __call__[Model: DataModel, Attribute](
+        self,
+        model: type[Model],
+        /,
+        *,
+        path: AttributePath[Model, Attribute] | Attribute,
+        index_type: Literal[
+            "keyword",
+            "integer",
+            "float",
+            "geo",
+            "text",
+            "bool",
+            "datetime",
+            "uuid",
+        ],
     ) -> bool: ...
 
 

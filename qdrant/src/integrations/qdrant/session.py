@@ -63,9 +63,9 @@ class QdrantSession:
                 prefer_grpc=True,
             )
 
-    async def _open_client(self) -> None:
+    async def _open_session(self) -> None:
         await self._client.close()
         self._client = self._prepare_client()
 
-    async def _close_client(self) -> None:
+    async def _close_session(self) -> None:
         await self._client.close()

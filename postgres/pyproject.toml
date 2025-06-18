@@ -3,10 +3,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "onnx-example"
+name = "postgres-example"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["draive~=0.71.0", "onnxruntime~=1.21.1", "tokenizers~=0.21.1"]
+dependencies = ["draive[openai]~=0.71.0", "asyncpg~=0.30"]
 
 [project.urls]
 Homepage = "https://miquido.com"

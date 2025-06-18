@@ -6,13 +6,13 @@ build-backend = "hatchling.build"
 name = "qdrant-example"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["draive[cohere]~=0.69.0", "qdrant-client~=1.12"]
+dependencies = ["draive[cohere]~=0.71.0", "qdrant-client~=1.12"]
 
 [project.urls]
 Homepage = "https://miquido.com"
 
 [project.optional-dependencies]
-dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.11"]
+dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.12"]
 
 [tool.hatch.build]
 sources = ["./src"]
