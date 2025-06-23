@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS
         created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         session_id UUID NOT NULL,
         role VARCHAR(64) NOT NULL,
-        content TEXT NOT NULL,
-        meta TEXT NOT NULL,
+        content JSONB NOT NULL,
+        meta JSONB NOT NULL,
         PRIMARY KEY(id)
     )
 ;\
@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS
         name VARCHAR(256) NOT NULL,
         description TEXT,
         content TEXT NOT NULL,
-        arguments TEXT NOT NULL,
-        meta TEXT NOT NULL,
+        arguments JSONB NOT NULL,
+        meta JSONB NOT NULL,
         PRIMARY KEY(id)
     )
 ;\
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS
         id UUID NOT NULL DEFAULT gen_random_uuid(),
         identifier VARCHAR(256) NOT NULL,
         created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        content TEXT NOT NULL,
+        content JSONB NOT NULL,
         PRIMARY KEY(id)
     )
 ;\
