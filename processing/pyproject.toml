@@ -1,0 +1,44 @@
+[build-system]
+requires = ["uv_build>=0.7.21,<0.8.0"]
+build-backend = "uv_build"
+
+[project]
+name = "processing-example"
+version = "0.1.0"
+requires-python = "~=3.12.1"
+dependencies = ["draive[gemini]~=0.78.0", "pillow~=11.2", "pypdfium2~=4.30"]
+
+[project.urls]
+Homepage = "https://miquido.com"
+
+[project.optional-dependencies]
+dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.12"]
+
+[tool.uv.build-backend]
+namespace = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [".venv", ".git", ".cache"]
+lint.select = ["E", "F", "A", "I", "B", "PL", "W", "C", "RUF", "UP"]
+lint.ignore = ["A005"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "E402"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+venvPath = "./.venv"
+include = ["./src"]
+exclude = ["**/node_modules", "**/__pycache__"]
+ignore = []
+stubPath = "./stubs"
+reportMissingImports = true
+reportMissingTypeStubs = false
+userFileIndexingLimit = -1
+useLibraryCodeForTypes = true
+
+[tool.pyright.analysis]
+diagnosticMode = "workspace"
+typeCheckingMode = "strict"
