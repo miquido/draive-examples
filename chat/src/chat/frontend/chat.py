@@ -28,7 +28,6 @@ from chainlit import (
 from chainlit.input_widget import TextInput
 from chainlit.types import ThreadDict
 from draive import (
-    AccumulativeVolatileMemory,
     ConversationEvent,
     ConversationMessage,
     DataModel,
@@ -140,7 +139,7 @@ async def resume_chat(
 ) -> None:
     try:
         memory: Memory[Sequence[ConversationMessage], ConversationMessage] = (
-            AccumulativeVolatileMemory()
+            Memory.accumulative_volatile()
         )
         for message in thread["steps"]:
             match message:
@@ -178,7 +177,7 @@ async def handle_message(
         mcp_state: Sequence[State] = user_session.get("mcp_state", ())  # pyright: ignore[reportAssignmentType]
         memory: Memory | None = user_session.get("memory")
         if memory is None:
-            memory = AccumulativeVolatileMemory()
+            memory = Memory.accumulative_volatile()
             user_session.set("memory", memory)
 
         async with ctx.scope(

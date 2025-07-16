@@ -131,7 +131,7 @@ class ONNXEmbeddingModel(ONNXModel):
         *,
         batch_size: int,
     ) -> Sequence[Sequence[float]]:
-        with ctx.scope("text_embedding"):
+        async with ctx.scope("text_embedding"):
             async with self._session_lock:
                 return await to_thread(
                     self._embed_texts,

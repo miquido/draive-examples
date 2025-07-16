@@ -1,17 +1,20 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.7.21,<0.8.0"]
+build-backend = "uv_build"
 
 [project]
 name = "ChainlitChat"
 version = "1.0.0"
 requires-python = ">=3.12"
-dependencies = ["draive[openai]~=0.71.0", "httpx~=0.28", "asyncpg~=0.30"]
+dependencies = ["draive[openai]~=0.78.0", "httpx~=0.28", "asyncpg~=0.30"]
 
 [dependency-groups]
 chat = ["chainlit~=2.0", "starlette~=0.41", "fastapi~=0.115", "pillow~=11.0"]
 migrations = []
 dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.12"]
+
+[tool.uv.build-backend]
+namespace = true
 
 [tool.ruff]
 target-version = "py312"
