@@ -13,7 +13,7 @@ COPY ./public ./public
 COPY .chainlit .chainlit
 COPY ./chainlit.md ./chainlit.md
 # install dependencies and packages
-COPY --from=ghcr.io/astral-sh/uv:0.6.10 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.8.22 /uv /uvx /bin/
 
 ENV UV_PROJECT_ENVIRONMENT="/usr/local/"
 
@@ -52,7 +52,7 @@ COPY ./src/solutions ./src/solutions
 COPY ./src/features ./src/features
 COPY ./src/migrations ./src/migrations
 # install dependencies and packages
-COPY --from=ghcr.io/astral-sh/uv:0.6.10 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.8.22 /uv /uvx /bin/
 
 ENV UV_PROJECT_ENVIRONMENT="/usr/local/"
 

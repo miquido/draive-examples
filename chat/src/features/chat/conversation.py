@@ -1,11 +1,10 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from datetime import datetime
 
 from draive import (
     Conversation,
-    ConversationMemory,
     ConversationMessage,
-    ConversationStreamElement,
+    ConversationOutputChunk,
     Toolbox,
 )
 
@@ -22,12 +21,12 @@ Current time is {time}.
 
 async def chat_stream(
     message: ConversationMessage,
-    memory: ConversationMemory,
-) -> AsyncIterator[ConversationStreamElement]:
+    memory: Sequence[ConversationMessage],
+) -> AsyncIterator[ConversationOutputChunk]:
     return await Conversation.completion(
-        instruction=INSTRUCTION.format(time=datetime.now().isoformat()),
+        instructions=INSTRUCTION.format(time=datetime.now().isoformat()),
         input=message,
         memory=memory,
-        tools=await Toolbox.fetched(),
+        tools=Toolbox.empty,
         stream=True,
     )

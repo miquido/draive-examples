@@ -6,8 +6,8 @@ from draive import (
     DataModel,
     File,
     FileAccess,
-    MediaData,
     Meta,
+    ResourceContent,
     asynchronous,
     ctx,
 )
@@ -25,7 +25,7 @@ __all__ = [
 class PDFPage(DataModel):
     page: int
     text: str
-    render: MediaData | None
+    render: ResourceContent | None
     meta: Meta
 
 
@@ -41,7 +41,7 @@ async def read_pdf(
         data = source
 
     else:
-        async with ctx.disposables(await FileAccess.open(source)):
+        async with ctx.disposables(FileAccess.open(source)):
             data = await File.read()
 
     document: PdfDocument = await _read_pdf(data)
@@ -88,9 +88,9 @@ def _read_pdf_page(
 
         return PDFPage(
             page=page_number,
-            render=MediaData.of(
+            render=ResourceContent.of(
                 normalized_image(page_image),
-                media="image/png",
+                mime_type="image/png",
                 meta={
                     "page_number": int(page_number),
                 },

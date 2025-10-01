@@ -1,20 +1,25 @@
 from asyncio import run
-from uuid import uuid4
 
-from draive import Conversation, ConversationMessage, Instructions, ctx
-from draive.openai import OpenAI, OpenAIChatConfig
-
-from integrations.postgres import PostgresConnectionPool
-from solutions.configuration import PostgresConfigurationProvider
-from solutions.instructions import PostgresInstructionsRepository
-from solutions.memory import PostgresConversationMemory
+from draive import (
+    Conversation,
+    ConversationMessage,
+    Instructions,
+    ctx,
+)
+from draive.openai import OpenAI, OpenAIResponsesConfig
+from draive.postgres import (
+    PostgresConfigurationRepository,
+    PostgresConnectionPool,
+    PostgresInstructionsRepository,
+    PostgresModelMemory,
+)
 
 
 async def main() -> None:
     async with ctx.scope(
         "example",
         # declare postgres as configuration provider
-        PostgresConfigurationProvider(),
+        PostgresConfigurationRepository(),
         # declare postgres as instructons repository
         PostgresInstructionsRepository(),
         disposables=(
@@ -22,13 +27,15 @@ async def main() -> None:
             PostgresConnectionPool(),  # use postgres connection pool
         ),
     ):
-        with ctx.updated(await OpenAIChatConfig.load()):
+        with ctx.updated(await OpenAIResponsesConfig.load()):
+            memory = PostgresModelMemory("example_session")
+            await memory.maintenance()  # initialize session if needed
             result: ConversationMessage = await Conversation.completion(
-                instruction=await Instructions.fetch("example"),
+                instructions=Instructions.of("example"),
                 input="Hello!",
                 # declare postgres as conversation memory
                 # use actual session ID to distinct multiple sessions
-                memory=PostgresConversationMemory(session_id=uuid4()),
+                memory=memory,
             )
 
             print(result)
