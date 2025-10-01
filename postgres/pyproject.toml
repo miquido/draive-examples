@@ -6,7 +6,7 @@ build-backend = "uv_build"
 name = "postgres-example"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["draive[openai]~=0.78.0", "asyncpg~=0.30"]
+dependencies = ["draive[openai, postgres]~=0.87.3"]
 
 [project.urls]
 Homepage = "https://miquido.com"

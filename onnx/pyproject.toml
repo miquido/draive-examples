@@ -6,13 +6,13 @@ build-backend = "uv_build"
 name = "onnx-example"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["draive~=0.78.0", "onnxruntime~=1.21", "tokenizers~=0.21"]
+dependencies = ["draive~=0.87.3", "onnxruntime~=1.21", "tokenizers~=0.22"]
 
 [project.urls]
 Homepage = "https://miquido.com"
 
 [project.optional-dependencies]
-dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.12"]
+dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.13"]
 
 [tool.uv.build-backend]
 namespace = true

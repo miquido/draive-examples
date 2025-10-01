@@ -1,5 +1,6 @@
-from base64 import b64decode, b64encode
+from base64 import b64decode
 from collections.abc import Sequence
+from io import BytesIO
 from typing import Any, cast
 
 from chainlit import (
@@ -28,13 +29,9 @@ from chainlit import (
 from chainlit.input_widget import TextInput
 from chainlit.types import ThreadDict
 from draive import (
-    ConversationEvent,
     ConversationMessage,
     DataModel,
     GuardrailsModerationException,
-    MediaData,
-    MediaReference,
-    Memory,
     MultimodalContent,
     State,
     TextContent,
@@ -43,7 +40,10 @@ from draive import (
     ctx,
 )
 from draive.mcp import MCPClient
+from draive.resources import ResourceContent, ResourceReference
 from haiway import LoggerObservability, getenv_str
+from PIL import Image as PILImage
+from PIL import UnidentifiedImageError
 
 from features.chat import chat_stream
 from solutions.data_layer import PostgresDataLayer, normalized_image
@@ -138,9 +138,7 @@ async def resume_chat(
     thread: ThreadDict,
 ) -> None:
     try:
-        memory: Memory[Sequence[ConversationMessage], ConversationMessage] = (
-            Memory.accumulative_volatile()
-        )
+        memory: list[ConversationMessage] = []
         for message in thread["steps"]:
             match message:
                 case {"type": "user_message", "output": str() as content, "parentId": None}:
@@ -150,17 +148,17 @@ async def resume_chat(
                         if element["forId"] == message["id"]  # pyright: ignore[reportTypedDictNotRequiredAccess]
                     ]
 
-                    await memory.remember(
+                    memory.append(
                         ConversationMessage.user(content=MultimodalContent.of(content, *elements))
                     )
 
                 case {"output": str() as content, "parentId": None}:
-                    await memory.remember(ConversationMessage.model(content=content))
+                    memory.append(ConversationMessage.model(content=content))
 
                 case _:
                     pass  # ignore
 
-        user_session.set("memory", memory)  # pyright: ignore
+        user_session.set("memory", memory)
 
     except Exception as exc:
         ctx.log_error(
@@ -175,47 +173,61 @@ async def handle_message(
 ) -> None:
     try:
         mcp_state: Sequence[State] = user_session.get("mcp_state", ())  # pyright: ignore[reportAssignmentType]
-        memory: Memory | None = user_session.get("memory")
-        if memory is None:
-            memory = Memory.accumulative_volatile()
-            user_session.set("memory", memory)
+        history: list[ConversationMessage] | None = cast(
+            list[ConversationMessage] | None,
+            user_session.get("memory"),
+        )
+        if history is None:
+            history = []
+            user_session.set("memory", history)
 
         async with ctx.scope(
             "message",
             *mcp_state,
             observability=LoggerObservability(),
         ):
+            user_conversation_message = ConversationMessage.user(
+                content=await _as_multimodal_content(
+                    content=message.content,
+                    elements=message.elements,  # pyright: ignore[reportArgumentType]
+                )
+            )
             response_message = Message(
                 author="assistant",
                 content="",
             )
 
+            streamed_chunks: list[MultimodalContent] = []
             async for chunk in await chat_stream(
-                message=await _as_multimodal_content(
-                    content=message.content,
-                    elements=message.elements,  # pyright: ignore[reportArgumentType]
-                ),
-                memory=memory,
+                message=user_conversation_message,
+                memory=history,
             ):
-                match chunk:
-                    case ConversationEvent():
-                        pass  # we are not supporting events yet
+                if not chunk.content.parts:
+                    continue
 
-                    case chunk:
-                        for element in _as_message_content(chunk.content):  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
-                            match element:
-                                case Text() as text:
-                                    # for a text message part simply add it to the UI
-                                    # this might not be fully accurate but chainlit seems to
-                                    # not support it any other way (except custom implementation)
-                                    await response_message.stream_token(str(text.content))
+                streamed_chunks.append(chunk.content)
+                for element in _as_message_content(chunk.content):  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+                    match element:
+                        case Text() as text:
+                            # for a text message part simply add it to the UI
+                            # this might not be fully accurate but chainlit seems to
+                            # not support it any other way (except custom implementation)
+                            await response_message.stream_token(str(text.content))
 
-                                case other:
-                                    # for a media add it separately
-                                    response_message.elements.append(other)  # pyright: ignore[reportArgumentType]
-                                    await response_message.update()
+                        case other:
+                            # for a media add it separately
+                            response_message.elements.append(other)  # pyright: ignore[reportArgumentType]
+                            await response_message.update()
 
             await response_message.send()  # end streaming
+
+            history.extend(
+                (
+                    user_conversation_message,
+                    ConversationMessage.model(content=_merge_multimodal_chunks(streamed_chunks)),
+                )
+            )
+            user_session.set("memory", history)
 
     except GuardrailsModerationException as exc:
         ctx.log_error(
@@ -237,11 +249,32 @@ async def handle_message(
         await ErrorMessage(author="error", content=str(exc)).send()
 
 
-# helper for getting base64 data from the local file
+# helper for loading image bytes and retaining mime information from local files
 @asynchronous
-def _load_image_b64(path: str) -> str:
+def _load_image_bytes(path: str) -> tuple[bytes, str]:
     with open(path, "rb") as file:
-        return b64encode(normalized_image(file.read())).decode("utf-8")
+        data = normalized_image(file.read())
+
+    try:
+        with PILImage.open(BytesIO(data)) as pil_image:
+            format_name = pil_image.format
+            mime_type = PILImage.MIME.get(format_name or "")
+
+            if not mime_type:
+                converted = (
+                    pil_image
+                    if pil_image.mode in ("RGB", "RGBA", "L")
+                    else pil_image.convert("RGBA")
+                )
+                buffer = BytesIO()
+                converted.save(buffer, format="PNG")
+                data = buffer.getvalue()
+                mime_type = "image/png"
+
+    except UnidentifiedImageError as exc:
+        raise ValueError(f"Unsupported image provided at {path}") from exc
+
+    return data, mime_type
 
 
 def _element_content(
@@ -262,9 +295,9 @@ def _element_content(
             "url": str() as url,
         } if url.startswith("data"):
             return MultimodalContent.of(
-                MediaData.of(
-                    url.removeprefix(f"data:{mime};base64,"),
-                    media=cast(Any, mime),
+                ResourceContent.of(
+                    b64decode(url.removeprefix(f"data:{mime};base64,")),
+                    mime_type=mime,
                 )
             )
 
@@ -286,17 +319,18 @@ async def _as_multimodal_content(
             case Image() as image:
                 if url := image.url:
                     parts.append(
-                        MediaReference.of(
+                        ResourceReference.of(
                             url,
-                            media="image",
+                            mime_type="image",
                         )
                     )
 
                 elif path := image.path:
+                    image_bytes, mime_type = await _load_image_bytes(path)
                     parts.append(
-                        MediaData.of(
-                            await _load_image_b64(path),
-                            media="image/png",
+                        ResourceContent.of(
+                            image_bytes,
+                            mime_type=mime_type,
                         )
                     )
 
@@ -318,39 +352,26 @@ def _as_message_content(  # noqa: C901
             case TextContent() as text:
                 result.append(Text(content=text.text))
 
-            case MediaData() as media_data:
-                match media_data.kind:
-                    case "image":
-                        result.append(
-                            Image(
-                                url=f"data:{media_data.media};base64,{b64encode(media_data.data)}"
-                            )
-                        )
+            case ResourceContent() as resource_content:
+                if resource_content.mime_type.startswith("image"):
+                    result.append(Image(url=resource_content.to_data_uri()))
 
-                    case "audio":
-                        result.append(
-                            Audio(
-                                url=f"data:{media_data.media};base64,{b64encode(media_data.data)}"
-                            )
-                        )
+                elif resource_content.mime_type.startswith("audio"):
+                    result.append(Audio(url=resource_content.to_data_uri()))
 
-                    case "video":
-                        result.append(
-                            Video(
-                                url=f"data:{media_data.media};base64,{b64encode(media_data.data)}"
-                            )
-                        )
+                elif resource_content.mime_type.startswith("video"):
+                    result.append(Video(url=resource_content.to_data_uri()))
 
-            case MediaReference() as media_reference:
-                match media_reference.kind:
-                    case "image":
-                        result.append(Image(url=media_reference.uri))
+            case ResourceReference() as resource_reference:
+                mime_type = resource_reference.mime_type or ""
+                if mime_type.startswith("audio"):
+                    result.append(Audio(url=resource_reference.uri))
 
-                    case "audio":
-                        result.append(Audio(url=media_reference.uri))
+                elif mime_type.startswith("video"):
+                    result.append(Video(url=resource_reference.uri))
 
-                    case "video":
-                        result.append(Video(url=media_reference.uri))
+                else:
+                    result.append(Image(url=resource_reference.uri))
 
             case DataModel() as data:
                 result.append(CustomElement(props=as_dict(data.to_mapping())))
@@ -362,3 +383,16 @@ def _as_message_content(  # noqa: C901
 def setup_postgres() -> PostgresDataLayer:
     # setup chainlit data layer - https://docs.chainlit.io/data-persistence/custom
     return PostgresDataLayer()
+
+
+def _merge_multimodal_chunks(
+    chunks: Sequence[MultimodalContent],
+) -> MultimodalContent:
+    if not chunks:
+        return MultimodalContent.of()
+
+    parts: list[Any] = []
+    for chunk in chunks:
+        parts.extend(chunk.parts)
+
+    return MultimodalContent.of(*parts)

@@ -7,9 +7,7 @@ from draive import (
     DataModel,
     Embedded,
     ImageEmbedding,
-    MediaContent,
-    MediaData,
-    MediaReference,
+    ResourceContent,
     TextContent,
     TextEmbedding,
     VectorIndex,
@@ -24,7 +22,7 @@ __all__ = [
 
 
 def QdrantVectorIndex() -> VectorIndex:  # noqa: C901, PLR0915
-    async def index[Model: DataModel, Value: MediaContent | TextContent | str](
+    async def index[Model: DataModel, Value: ResourceContent | TextContent | str](
         model: type[Model],
         /,
         values: Iterable[Model],
@@ -51,15 +49,15 @@ def QdrantVectorIndex() -> VectorIndex:  # noqa: C901, PLR0915
                 case TextContent() as text_content:
                     selected_values.append(text_content.text)
 
-                case MediaData() as media_data:
-                    if media_data.kind != "image":
-                        raise ValueError(f"{media_data.kind} embedding is not supported")
+                case ResourceContent() as resource_content:
+                    if not resource_content.mime_type.startswith("image"):
+                        raise ValueError(f"{resource_content.mime_type} embedding is not supported")
 
-                    selected_values.append(media_data.data)
+                    selected_values.append(resource_content.data)
 
-                case MediaReference():
-                    # we could download items for embedding if needed
-                    raise ValueError("MediaReference is not supported")
+                case other:
+                    # we could download items from resource references for embedding if needed
+                    raise ValueError(f"{other} embedding is not supported")
 
         embedded_values: Sequence[Embedded[str] | Embedded[bytes]]
         if all(isinstance(value, str) for value in selected_values):
@@ -95,13 +93,13 @@ def QdrantVectorIndex() -> VectorIndex:  # noqa: C901, PLR0915
     async def search[Model: DataModel](  # noqa: PLR0913
         model: type[Model],
         /,
-        query: Sequence[float] | MediaContent | TextContent | str | None = None,
+        query: Sequence[float] | ResourceContent | TextContent | str | None = None,
         score_threshold: float | None = None,
         requirements: AttributeRequirement[Model] | None = None,
         limit: int | None = None,
         rerank: bool = False,
         **extra: Any,
-    ) -> Iterable[Model]:
+    ) -> Sequence[Model]:
         assert query is not None or (query is None and score_threshold is None)  # nosec: B101
         query_vector: Sequence[float]
         match query:
@@ -121,19 +119,15 @@ def QdrantVectorIndex() -> VectorIndex:  # noqa: C901, PLR0915
                 embedded_query: Embedded[str] = await TextEmbedding.embed(text_content.text)
                 query_vector = embedded_query.vector
 
-            case MediaData() as media_data:
-                if media_data.kind != "image":
-                    raise ValueError(f"{media_data.kind} embedding is not supported")
+            case ResourceContent() as resource_content:
+                if not resource_content.mime_type.startswith("image"):
+                    raise ValueError(f"{resource_content.mime_type} embedding is not supported")
 
                 embedded_image: Embedded[bytes] = await ImageEmbedding.embed(
-                    media_data.data,
+                    resource_content.data,
                     **extra,
                 )
                 query_vector = embedded_image.vector
-
-            case MediaReference():
-                # we could download items for embedding if needed
-                raise ValueError("MediaReference is not supported")
 
             case vector:
                 query_vector = vector

@@ -15,7 +15,7 @@ from draive import (
     stage,
     tool,
 )
-from draive.gemini import Gemini, GeminiGenerationConfig
+from draive.gemini import Gemini, GeminiConfig
 
 from integrations.pdf import PDFPage, read_pdf
 
@@ -28,7 +28,7 @@ async def processing(
 ) -> None:
     async with ctx.scope(
         "processing",
-        GeminiGenerationConfig(model="gemini-2.5-flash"),
+        GeminiConfig(model="gemini-2.5-flash"),
         disposables=(Gemini(),),
     ):
         pdf_pages: AsyncGenerator[PDFPage] = read_pdf(
@@ -126,7 +126,7 @@ async def consult(
     context: str = Argument(description="Additional context required to understand the subject"),
 ) -> MultimodalContent:
     with ctx.updated(
-        GeminiGenerationConfig(
+        GeminiConfig(
             model="gemini-2.5-pro",
             thinking_budget=1024,
         )
@@ -138,7 +138,7 @@ async def consult(
             )
             .with_retry(limit=1)
             .execute()
-        ).without_meta()
+        )
 
 
 CONSULT_PROCESS_INSTRUCTION: str = """\
@@ -188,7 +188,7 @@ def analysis(subject: str) -> Stage:
                     read_page,
                     consult,
                     finish_analysis,
-                    suggest=True,
+                    suggesting=True,
                 ),
             )
             .with_retry(limit=3)

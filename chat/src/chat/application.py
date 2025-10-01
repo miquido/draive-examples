@@ -3,12 +3,12 @@ from logging import Logger, getLogger
 
 from chainlit.utils import mount_chainlit
 from draive import Disposables, setup_logging
-from draive.openai import OpenAI, OpenAIChatConfig
+from draive.openai import OpenAI, OpenAIResponsesConfig
+from draive.postgres import PostgresConnectionPool
 from fastapi import FastAPI
 
 from chat.middlewares import ContextMiddleware
 from chat.routes import technical_router
-from integrations.postgres import PostgresConnectionPool
 
 __all__ = [
     "app",
@@ -27,15 +27,18 @@ async def lifespan(app: FastAPI):
         logger.info("Starting server...")
 
     disposables: Disposables = Disposables(
-        OpenAI(),
-        PostgresConnectionPool(),
+        [
+            OpenAI(),
+            PostgresConnectionPool(),
+        ]
     )
 
     try:
         app.extra["state"] = (
             *await disposables.prepare(),
-            OpenAIChatConfig(model="gpt-4o"),
+            OpenAIResponsesConfig(model="gpt-5-mini"),
         )
+        app.extra["presets"] = ()
 
         logger.info("...server started...")
         yield  # suspend until server shutdown

@@ -1,8 +1,8 @@
-from integrations.postgres import PostgresConnection
+from draive.postgres import PostgresConnection
 
 
-async def execute_migration() -> None:
-    await PostgresConnection.execute(
+async def migration(connection: PostgresConnection) -> None:
+    await connection.execute(
         """
         CREATE TABLE IF NOT EXISTS
             users (
@@ -17,7 +17,7 @@ async def execute_migration() -> None:
         """
     )
 
-    await PostgresConnection.execute(
+    await connection.execute(
         """
         CREATE TABLE IF NOT EXISTS
             threads (
@@ -34,7 +34,7 @@ async def execute_migration() -> None:
         """  # noqa: E501
     )
 
-    await PostgresConnection.execute(
+    await connection.execute(
         """
         CREATE TABLE IF NOT EXISTS
             elements (
@@ -56,7 +56,7 @@ async def execute_migration() -> None:
         """  # noqa: E501
     )
 
-    await PostgresConnection.execute(
+    await connection.execute(
         """
         CREATE TABLE IF NOT EXISTS
             steps (

@@ -6,19 +6,27 @@ Examples of [draive](https://github.com/miquido/draive) library usage.
 
 Simple, locally running chat solution. Allows selecting from various LLM models and talk with a PDF.
 
-## News
+## ONNX
 
-Example of agents workflow. Uses chat interface to provide a news page based on provided sources or topics.
+Custom embedding model running locally with onnx.
 
-## Course
+## Postgres
 
-Code from the [draive course](https://www.youtube.com/playlist?list=PLbS8Yksu3iAoRpDOGwP_UmK5s6B3SDz8T) split into separate folder for each video.
+Utilizing postgres database for common functionalities.
+
+## Qdrant
+
+Implementing vector index with Qdrant database.
+
+## Processing
+
+Example of multi-stage data pipeline.
 
 ## License
 
 MIT License
 
-Copyright (c) 2024 Miquido
+Copyright (c) 2024-2025 Miquido
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

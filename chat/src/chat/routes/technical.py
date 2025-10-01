@@ -7,6 +7,7 @@ __all__ = [
 
 router = APIRouter()
 
+
 @router.get(
     path="/health",
     description="Server health check with optional status and diagnostics.",

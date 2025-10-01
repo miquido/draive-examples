@@ -1,9 +1,7 @@
 from asyncio import run
 
 from draive import ctx, setup_logging
-
-from integrations.postgres import PostgresConnectionPool
-from migrations.postgres.execution import execute_postgres_migrations
+from draive.postgres import Postgres, PostgresConnectionPool
 
 
 async def migrate_databases() -> None:
@@ -11,7 +9,7 @@ async def migrate_databases() -> None:
         "migrations",
         disposables=(PostgresConnectionPool(),),
     ):
-        await execute_postgres_migrations()
+        await Postgres.execute_migrations(f"{__package__}.postgres")
 
 
 def main() -> None:

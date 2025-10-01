@@ -1,85 +1,79 @@
-from integrations.postgres import PostgresConnection
+from draive.postgres import PostgresConnection
 
 
-async def execute_migration() -> None:
-    # Conversation Memory #
-    await PostgresConnection.execute(
-        """\
-CREATE TABLE IF NOT EXISTS
-    conversation_messages (
-        id UUID NOT NULL DEFAULT gen_random_uuid(),
-        created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        session_id UUID NOT NULL,
-        role VARCHAR(64) NOT NULL,
-        content JSONB NOT NULL,
-        meta JSONB NOT NULL,
-        PRIMARY KEY(id)
-    )
-;\
+async def migration(connection: PostgresConnection) -> None:
+    # configurations #
+    await connection.execute(
         """
+CREATE TABLE configurations (
+    identifier TEXT NOT NULL,
+    content JSONB NOT NULL,
+    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (identifier, created)
+);
+"""
     )
-    await PostgresConnection.execute(
-        """\
-CREATE INDEX IF NOT EXISTS
-    conversation_messages_session_index
 
-ON
-    conversation_messages (session_id)
-;\
+    await connection.execute(
+        """
+INSERT INTO configurations (identifier, content)
+VALUES ('OpenAIResponsesConfig', '{"model":"gpt-5"}'::jsonb);
         """
     )
 
-    # Instructions #
-    await PostgresConnection.execute(
-        """\
-CREATE TABLE IF NOT EXISTS
-    instructions (
-        id UUID NOT NULL DEFAULT gen_random_uuid(),
-        created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        name VARCHAR(256) NOT NULL,
-        description TEXT,
-        content TEXT NOT NULL,
-        arguments JSONB NOT NULL,
-        meta JSONB NOT NULL,
-        PRIMARY KEY(id)
-    )
-;\
+    # instructions #
+    await connection.execute(
         """
+CREATE TABLE instructions (
+    name TEXT NOT NULL,
+    description TEXT DEFAULT NULL,
+    content TEXT NOT NULL,
+    arguments JSONB NOT NULL DEFAULT '[]'::jsonb,
+    meta JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (name, created)
+);
+    """
     )
-    await PostgresConnection.execute(
-        """\
-CREATE INDEX IF NOT EXISTS
-    instructions_name_index
 
-ON
-    instructions (name)
-;\
+    await connection.execute(
+        """
+INSERT INTO instructions (name, description, content)
+VALUES (
+    'example',
+    'Example scenario prompt',
+    'You are a helpful assistant answering as concisely as possible.'
+);
         """
     )
 
-    # arguments: Sequence[InstructionDeclarationArgument]
-
-    # Configuration #
-    await PostgresConnection.execute(
-        """\
-CREATE TABLE IF NOT EXISTS
-    configurations (
-        id UUID NOT NULL DEFAULT gen_random_uuid(),
-        identifier VARCHAR(256) NOT NULL,
-        created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        content JSONB NOT NULL,
-        PRIMARY KEY(id)
+    # memories #
+    await connection.execute(
+        """
+CREATE TABLE memories (
+    identifier TEXT NOT NULL,
+    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (identifier)
+);
+    """
     )
-;\
+
+    await connection.execute(
+        """
+CREATE TABLE memories_variables (
+    identifier TEXT NOT NULL REFERENCES memories (identifier) ON DELETE CASCADE,
+    variables JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
         """
     )
-    await PostgresConnection.execute(
-        """\
-CREATE INDEX IF NOT EXISTS
-    configurations_identifier_index
 
-ON
-    configurations (identifier)
-;\
+    await connection.execute(
         """
+CREATE TABLE memories_elements (
+    identifier TEXT NOT NULL REFERENCES memories (identifier) ON DELETE CASCADE,
+    content JSONB NOT NULL,
+    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+    """
     )
