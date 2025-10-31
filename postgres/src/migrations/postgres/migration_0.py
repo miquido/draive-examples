@@ -21,24 +21,24 @@ VALUES ('OpenAIResponsesConfig', '{"model":"gpt-5"}'::jsonb);
         """
     )
 
-    # instructions #
+    # templates #
     await connection.execute(
         """
-CREATE TABLE instructions (
-    name TEXT NOT NULL,
+CREATE TABLE templates (
+    identifier TEXT NOT NULL,
     description TEXT DEFAULT NULL,
     content TEXT NOT NULL,
-    arguments JSONB NOT NULL DEFAULT '[]'::jsonb,
+    variables JSONB NOT NULL DEFAULT '{}'::jsonb,
     meta JSONB NOT NULL DEFAULT '{}'::jsonb,
     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (name, created)
+    PRIMARY KEY (identifier, created)
 );
     """
     )
 
     await connection.execute(
         """
-INSERT INTO instructions (name, description, content)
+INSERT INTO templates (identifier, description, content)
 VALUES (
     'example',
     'Example scenario prompt',
