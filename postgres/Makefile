@@ -12,7 +12,7 @@ ifndef UV_VERSION
 	UV_VERSION := 0.7.21
 endif
 
-.PHONY: uv_check venv sync lock update format lint migrations example
+.PHONY: uv_check venv sync lock update format lint migrations example example-vector database
 
 
 # Check installed UV version and install if needed
@@ -81,3 +81,21 @@ migrations:
 
 example:
 	@python -B -m example
+
+example-vector:
+	@python -B -m example.vector
+
+database:
+	@echo '# Starting PostgreSQL database with pgvector...'
+	@if docker ps -a --format '{{.Names}}' | grep -q '^postgres-draive-example$$'; then \
+		docker start postgres-draive-example; \
+	else \
+		docker run -d \
+			--name postgres-draive-example \
+			-e POSTGRES_USER=$(POSTGRES_USER) \
+			-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+			-e POSTGRES_DB=$(POSTGRES_DATABASE) \
+			-p $(POSTGRES_PORT):5432 \
+			pgvector/pgvector:pg16; \
+	fi
+	@echo '...database started!'
