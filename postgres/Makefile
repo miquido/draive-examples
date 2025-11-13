@@ -9,7 +9,7 @@ SOURCES_PATH := src
 -include .env
 
 ifndef UV_VERSION
-	UV_VERSION := 0.7.21
+	UV_VERSION := 0.9.7
 endif
 
 .PHONY: uv_check venv sync lock update format lint migrations example example-vector database

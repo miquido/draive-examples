@@ -1,0 +1,24 @@
+#!/bin/sh
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+	against=HEAD
+else
+	against=$(git hash-object -t tree /dev/null)
+fi
+
+. ./.venv/bin/activate
+
+make lint
+if test $? != 0
+then
+	exit 1
+fi
+
+make unit_tests
+if test $? != 0
+then
+	exit 1
+fi
+
+exec git diff-index --check --cached $against --

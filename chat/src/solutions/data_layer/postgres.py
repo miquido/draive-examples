@@ -661,6 +661,10 @@ class PostgresDataLayer(BaseDataLayer):
     async def build_debug_url(self) -> str:
         return ""
 
+    # not implemented - ignore
+    async def close(self) -> None:
+        pass
+
 
 async def fetch_element_content(
     element_id: str,

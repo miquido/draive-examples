@@ -17,12 +17,12 @@ from chainlit import (
     User,
     Video,
     data_layer,
-    on_chat_end,
-    on_chat_resume,
-    on_chat_start,
-    on_message,
+    on_chat_end,  # pyright: ignore[reportUnknownVariableType]
+    on_chat_resume,  # pyright: ignore[reportUnknownVariableType]
+    on_chat_start,  # pyright: ignore[reportUnknownVariableType]
+    on_message,  # pyright: ignore[reportUnknownVariableType]
     on_settings_update,
-    password_auth_callback,
+    password_auth_callback,  # pyright: ignore[reportUnknownVariableType]
     set_starters,
     user_session,
 )
@@ -81,29 +81,29 @@ async def start() -> None:
             ),
         ]
     ).send()
-    user_session.set("mcp_client", None)
-    user_session.set("mcp_state", ())
+    user_session.set("mcp_client", None)  # pyright: ignore[reportUnknownMemberType]
+    user_session.set("mcp_state", ())  # pyright: ignore[reportUnknownMemberType]
 
 
 @on_chat_end
 async def end() -> None:
     ctx.log_debug("...closing chat session...")
-    if client := user_session.get("mcp_client"):
+    if client := user_session.get("mcp_client"):  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
         ctx.log_debug("...closing mcp client...")
-        await client.__aexit__(None, None, None)
+        await client.__aexit__(None, None, None)  # pyright: ignore[reportUnknownMemberType]
 
 
 @on_settings_update
 async def update_settings(settings: dict[str, Any]) -> None:
     mcp_server: str | None = settings.get("mcp_server")
     ctx.log_debug("Chat settings updated!")
-    if client := user_session.get("mcp_client"):
-        if client.identifier == mcp_server:
+    if client := user_session.get("mcp_client"):  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+        if client.identifier == mcp_server:  # pyright: ignore[reportUnknownMemberType]
             ctx.log_debug("Keeping current mcp client...")
             return  # keep the same one
 
         ctx.log_debug("Closing current mcp client...")
-        await client.__aexit__(None, None, None)
+        await client.__aexit__(None, None, None)  # pyright: ignore[reportUnknownMemberType]
 
     if mcp_server:
         ctx.log_debug("...preparing new mcp client...")
@@ -124,13 +124,13 @@ async def update_settings(settings: dict[str, Any]) -> None:
                 args=command_parts[1:],
             )
 
-        user_session.set("mcp_client", mcp_client)
-        user_session.set("mcp_state", await mcp_client.__aenter__())
+        user_session.set("mcp_client", mcp_client)  # pyright: ignore[reportUnknownMemberType]
+        user_session.set("mcp_state", await mcp_client.__aenter__())  # pyright: ignore[reportUnknownMemberType]
 
     else:
         ctx.log_debug("...removing mcp client...")
-        user_session.set("mcp_client", None)
-        user_session.set("mcp_state", ())
+        user_session.set("mcp_client", None)  # pyright: ignore[reportUnknownMemberType]
+        user_session.set("mcp_state", ())  # pyright: ignore[reportUnknownMemberType]
 
 
 @on_chat_resume
@@ -158,7 +158,7 @@ async def resume_chat(
                 case _:
                     pass  # ignore
 
-        user_session.set("memory", memory)
+        user_session.set("memory", memory)  # pyright: ignore[reportUnknownMemberType]
 
     except Exception as exc:
         ctx.log_error(
@@ -172,14 +172,14 @@ async def handle_message(
     message: Message,
 ) -> None:
     try:
-        mcp_state: Sequence[State] = user_session.get("mcp_state", ())  # pyright: ignore[reportAssignmentType]
+        mcp_state: Sequence[State] = user_session.get("mcp_state", ())  # pyright: ignore[reportAssignmentType, reportUnknownMemberType, reportUnknownVariableType]
         history: list[ConversationMessage] | None = cast(
             list[ConversationMessage] | None,
-            user_session.get("memory"),
+            user_session.get("memory"),  # pyright: ignore[reportUnknownMemberType]
         )
         if history is None:
             history = []
-            user_session.set("memory", history)
+            user_session.set("memory", history)  # pyright: ignore[reportUnknownMemberType]
 
         async with ctx.scope(
             "message",
@@ -227,7 +227,7 @@ async def handle_message(
                     ConversationMessage.model(content=_merge_multimodal_chunks(streamed_chunks)),
                 )
             )
-            user_session.set("memory", history)
+            user_session.set("memory", history)  # pyright: ignore[reportUnknownMemberType]
 
     except GuardrailsModerationException as exc:
         ctx.log_error(

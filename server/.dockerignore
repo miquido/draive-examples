@@ -1,0 +1,5 @@
+*
+!/Makefile
+!./pyproject.toml
+!./src
+!./uv.lock

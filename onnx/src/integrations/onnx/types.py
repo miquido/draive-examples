@@ -26,4 +26,4 @@ type ONNXExecutionProviderName = (
 type ONNXExecutionProvider = (
     ONNXExecutionProviderName | tuple[ONNXExecutionProviderName, dict[str, Any]]
 )
-type ONNXSessionOptions = onnx.SessionOptions
+type ONNXSessionOptions = onnx.SessionOptions  # pyright: ignore[reportUnknownMemberType]

@@ -1,18 +1,18 @@
 [build-system]
-requires = ["uv_build>=0.7.21,<0.8.0"]
+requires = ["uv_build>=0.9.0,<0.10.0"]
 build-backend = "uv_build"
 
 [project]
 name = "qdrant-example"
 version = "0.1.0"
-requires-python = ">=3.12"
-dependencies = ["draive[cohere]~=0.87.3", "qdrant-client~=1.12"]
+requires-python = "~=3.13.7"
+dependencies = ["draive[cohere]~=0.91.4", "qdrant-client~=1.12"]
 
 [project.urls]
 Homepage = "https://miquido.com"
 
 [project.optional-dependencies]
-dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.12"]
+dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.14"]
 
 [tool.uv.build-backend]
 namespace = true
@@ -36,9 +36,5 @@ ignore = []
 stubPath = "./stubs"
 reportMissingImports = true
 reportMissingTypeStubs = false
-userFileIndexingLimit = -1
 useLibraryCodeForTypes = true
-
-[tool.pyright.analysis]
-diagnosticMode = "workspace"
 typeCheckingMode = "strict"

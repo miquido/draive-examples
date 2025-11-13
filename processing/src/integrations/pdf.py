@@ -77,10 +77,11 @@ def _read_pdf_page(
     render: bool,
 ) -> PDFPage:
     # Extract page text, normalize whitespace and trim
-    page_text: str = " ".join((page.get_textpage().get_text_bounded()).split())
+
+    page_text: str = " ".join((page.get_textpage().get_text_bounded()).split())  # pyright: ignore[reportUnknownMemberType]
 
     if render:
-        page_image: Image = page.render(
+        page_image: Image = page.render(  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
             # Calculate scale factor based on DPI (72 is the default PDF DPI)
             scale=dpi / 72.0,  # pyright: ignore[reportArgumentType]
             rotation=0,
@@ -89,7 +90,7 @@ def _read_pdf_page(
         return PDFPage(
             page=page_number,
             render=ResourceContent.of(
-                normalized_image(page_image),
+                normalized_image(page_image),  # pyright: ignore[reportUnknownArgumentType]
                 mime_type="image/png",
                 meta={
                     "page_number": int(page_number),
