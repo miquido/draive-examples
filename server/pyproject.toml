@@ -1,0 +1,60 @@
+[build-system]
+requires = ["uv_build>=0.9.0,<0.10.0"]
+build-backend = "uv_build"
+
+[project]
+name = "assistant"
+version = "0.1.0"
+requires-python = "~=3.13.7"
+dependencies = [
+  "draive[openai, httpx, postgres, opentelemetry]~=0.92.1",
+  "fastapi-slim~=0.121",
+  "joserfc~=1.4",
+]
+
+[project.urls]
+Homepage = "https://miquido.com"
+
+[project.optional-dependencies]
+cli = ["httpx~=0.27"]
+server = ["granian~=2.5"]
+migrations = []
+dev = [
+  "granian[reload]~=2.5",
+  "bandit~=1.7",
+  "pyright~=1.1",
+  "pytest-asyncio~=1.1",
+  "pytest~=8.0",
+  "pytest-cov~=7.0",
+  "ruff~=0.14",
+]
+
+[tool.uv.build-backend]
+namespace = true
+package-dir = "src"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+extend-exclude = [".venv", ".git", ".cache"]
+lint.select = ["E", "F", "A", "I", "B", "PL", "W", "C", "RUF", "UP"]
+lint.ignore = ["A005", "PLR0913"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["draive.Default"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "E402"]
+"./tests/*.py" = ["PLR2004"]
+
+[tool.pyright]
+pythonVersion = "3.13"
+venvPath = "./.venv"
+include = ["./src"]
+exclude = ["**/node_modules", "**/__pycache__"]
+ignore = []
+stubPath = "./stubs"
+reportMissingImports = true
+reportMissingTypeStubs = false
+useLibraryCodeForTypes = true
+typeCheckingMode = "strict"

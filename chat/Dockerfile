@@ -1,5 +1,5 @@
-ARG PYTHON_TAG=3.12
-ARG UNIT_TAG=1.32.1-python${PYTHON_TAG}
+ARG PYTHON_TAG=3.13
+ARG UNIT_TAG=1.34.2-python${PYTHON_TAG}-slim
 
 # CHAT SERVER #
 
@@ -13,11 +13,14 @@ COPY ./public ./public
 COPY .chainlit .chainlit
 COPY ./chainlit.md ./chainlit.md
 # install dependencies and packages
-COPY --from=ghcr.io/astral-sh/uv:0.8.22 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.9.7 /uv /uvx /bin/
 
 ENV UV_PROJECT_ENVIRONMENT="/usr/local/"
+ENV PYTHONPATH="/src"
 
-RUN --mount=type=bind,source=./uv.lock,target=./uv.lock --mount=type=bind,source=./pyproject.toml,target=./pyproject.toml uv sync --python python${PYTHON_TAG} --locked --no-editable --no-python-downloads --link-mode copy --compile-bytecode --only-group chat
+RUN --mount=type=bind,source=./uv.lock,target=./uv.lock \
+  --mount=type=bind,source=./pyproject.toml,target=./pyproject.toml \
+  uv sync --locked --link-mode copy --compile-bytecode --project ./ --extra chat
 
 FROM chat_builder AS chat
 
@@ -52,11 +55,13 @@ COPY ./src/solutions ./src/solutions
 COPY ./src/features ./src/features
 COPY ./src/migrations ./src/migrations
 # install dependencies and packages
-COPY --from=ghcr.io/astral-sh/uv:0.8.22 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.9.7 /uv /uvx /bin/
 
 ENV UV_PROJECT_ENVIRONMENT="/usr/local/"
 
-RUN --mount=type=bind,source=./uv.lock,target=./uv.lock --mount=type=bind,source=./pyproject.toml,target=./pyproject.toml uv sync --python python${PYTHON_TAG} --locked --no-editable --no-python-downloads --link-mode copy --compile-bytecode --only-group migrations
+RUN --mount=type=bind,source=./uv.lock,target=./uv.lock \
+  --mount=type=bind,source=./pyproject.toml,target=./pyproject.toml \
+  uv sync --locked --link-mode copy --compile-bytecode --project ./ --extra migrations
 
 FROM migrations_builder AS migrations
 

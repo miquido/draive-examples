@@ -12,7 +12,10 @@ from haiway import ctx
 from tokenizers import AddedToken, Encoding, Tokenizer
 
 from integrations.onnx.model import ONNXModel
-from integrations.onnx.types import ONNXExecutionProvider, ONNXSessionOptions
+from integrations.onnx.types import (
+    ONNXExecutionProvider,
+    ONNXSessionOptions,  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
+)
 
 __all__ = (
     "ONNXEmbeddingConfig",
@@ -41,9 +44,9 @@ class ONNXEmbeddingModel(ONNXModel):
         *,
         tokenizer_path: Path | str | None = None,
         execution_provider: ONNXExecutionProvider,
-        session_options: ONNXSessionOptions | None = None,
+        session_options: ONNXSessionOptions | None = None,  # pyright: ignore[reportUnknownParameterType]
     ) -> None:
-        super().__init__(
+        super().__init__(  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
             model_path,
             execution_provider=execution_provider,
             session_options=session_options,
@@ -160,23 +163,23 @@ class ONNXEmbeddingModel(ONNXModel):
     ) -> Sequence[Sequence[float]]:
         try:
             # Encode all texts in the batch
-            encodings: list[Encoding] = self._tokenizer.encode_batch(texts)
+            encodings: list[Encoding] = self._tokenizer.encode_batch(texts)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
             # Prepare batch inputs
-            input_ids = np.array([encoding.ids for encoding in encodings])
+            input_ids = np.array([encoding.ids for encoding in encodings])  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
             onnx_input: dict[str, np.ndarray] = {
                 "input_ids": np.array(input_ids, dtype=np.int64),
             }
             # Add attention mask if needed
             if "attention_mask" in self.input_names:
                 onnx_input["attention_mask"] = np.array(
-                    np.array([encoding.attention_mask for encoding in encodings]),
+                    np.array([encoding.attention_mask for encoding in encodings]),  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
                     dtype=np.int64,
                 )
             # Add token type ids if needed
             if "token_type_ids" in self.input_names:
                 onnx_input["token_type_ids"] = np.zeros_like(input_ids, dtype=np.int64)
             # Run the model
-            model_output: Sequence[Any] = self._run(input_feed=onnx_input)
+            model_output: Sequence[Any] = self._run(input_feed=onnx_input)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
             embeddings = model_output[0]
             # Process embeddings based on their shape
             if embeddings.ndim == 3:  # (batch_size, seq_len, embedding_dim)  # noqa: PLR2004
@@ -247,12 +250,12 @@ def _load_tokenizer(model_dir: Path) -> Tokenizer:
     if not tokenizer_path.exists():
         raise ValueError(f"Missing tokenizer.json at {model_dir}")
 
-    tokenizer = Tokenizer.from_file(str(tokenizer_path))
+    tokenizer = Tokenizer.from_file(str(tokenizer_path))  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
 
     max_length, pad_token = _load_tokenizer_config(model_dir)
-    tokenizer.enable_truncation(max_length=max_length)
+    tokenizer.enable_truncation(max_length=max_length)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
     pad_token_id = _load_pad_token_id(model_dir)
-    tokenizer.enable_padding(
+    tokenizer.enable_padding(  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
         pad_id=pad_token_id,
         pad_token=pad_token,
     )
@@ -260,9 +263,9 @@ def _load_tokenizer(model_dir: Path) -> Tokenizer:
     if tokens_map := _load_tokenizer_special_tokens(model_dir):
         for token in tokens_map.values():
             if isinstance(token, str):
-                tokenizer.add_special_tokens([token])
+                tokenizer.add_special_tokens([token])  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
 
             elif isinstance(token, dict):
-                tokenizer.add_special_tokens([AddedToken(**token)])
+                tokenizer.add_special_tokens([AddedToken(**token)])  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
 
-    return tokenizer
+    return tokenizer  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]

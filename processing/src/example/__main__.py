@@ -1,9 +1,10 @@
 import argparse
 from asyncio import run
 from collections.abc import AsyncGenerator, Sequence
+from typing import Annotated
 
 from draive import (
-    Argument,
+    Description,
     Meta,
     MultimodalContent,
     Stage,
@@ -122,8 +123,8 @@ Make sure to include all visible elements in the result.
     description="Consult given subject with independent consultant without access to your knowledge"
 )
 async def consult(
-    subject: str = Argument(description="Subject to be consulted"),
-    context: str = Argument(description="Additional context required to understand the subject"),
+    subject: Annotated[str, Description("Subject to be consulted")],
+    context: Annotated[str, Description("Additional context required to understand the subject")],
 ) -> MultimodalContent:
     with ctx.updated(
         GeminiConfig(
@@ -168,7 +169,7 @@ def analysis(subject: str) -> Stage:
 
         @tool(description="Access the contents of the document page")
         async def read_page(
-            page: int = Argument(description="Page number, indexed from 0"),
+            page: Annotated[int, Description("Page number, indexed from 0")],
         ) -> str:
             document: ProcessedDocument = state.get(
                 ProcessedDocument,

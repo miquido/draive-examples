@@ -2,7 +2,7 @@ from integrations.onnx.embedding import ONNXEmbeddingConfig, ONNXEmbeddingModel
 from integrations.onnx.types import (
     ONNXExcetion,
     ONNXExecutionProvider,
-    ONNXSessionOptions,
+    ONNXSessionOptions,  # pyright: ignore[reportUnknownVariableType]
 )
 
 __all__ = (

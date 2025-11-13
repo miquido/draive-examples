@@ -57,9 +57,7 @@ def _flat_vector(
     /,
 ) -> Mapping[str, Sequence[float]] | Sequence[float]:
     match vector:
-        case {**vectors} if all(isinstance(key, str) for key in vectors.keys()) and all(
-            isinstance(item, float) for item in vectors.items()
-        ):
+        case {**vectors} if all(isinstance(item, float) for item in vectors.items()):
             return dict(vectors)
 
         case [*vector] if all(isinstance(element, float) for element in vector):

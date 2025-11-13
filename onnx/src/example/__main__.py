@@ -17,7 +17,7 @@ async def embedding() -> None:
             ),
         ),
     ):
-        embedded = await TextEmbedding.embed(
+        embedded = await TextEmbedding.embed_many(
             (
                 "Lorem ipsum dolor sit amet",
                 "More things to embed",

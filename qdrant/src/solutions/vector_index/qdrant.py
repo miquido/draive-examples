@@ -21,7 +21,7 @@ __all__ = [
 ]
 
 
-def QdrantVectorIndex() -> VectorIndex:  # noqa: C901, PLR0915
+def QdrantVectorIndex() -> VectorIndex:  # noqa: C901
     async def index[Model: DataModel, Value: ResourceContent | TextContent | str](
         model: type[Model],
         /,
@@ -55,19 +55,15 @@ def QdrantVectorIndex() -> VectorIndex:  # noqa: C901, PLR0915
 
                     selected_values.append(resource_content.data)
 
-                case other:
-                    # we could download items from resource references for embedding if needed
-                    raise ValueError(f"{other} embedding is not supported")
-
         embedded_values: Sequence[Embedded[str] | Embedded[bytes]]
         if all(isinstance(value, str) for value in selected_values):
-            embedded_values = await TextEmbedding.embed(
+            embedded_values = await TextEmbedding.embed_many(
                 cast(list[str], selected_values),
                 **extra,
             )
 
         elif all(value for value in selected_values):
-            embedded_values = await ImageEmbedding.embed(
+            embedded_values = await ImageEmbedding.embed_many(
                 cast(list[bytes], selected_values),
                 **extra,
             )

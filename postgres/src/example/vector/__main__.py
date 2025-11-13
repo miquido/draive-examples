@@ -6,7 +6,7 @@ from draive import DataModel, Default, ctx
 from draive.openai import OpenAI
 from draive.postgres import PostgresConnectionPool, PostgresVectorIndex
 from draive.utils import VectorIndex
-from pgvector.asyncpg import register_vector
+from pgvector.asyncpg import register_vector  # pyright: ignore
 
 
 # Inline model definition
