@@ -20,7 +20,7 @@ __all__ = (
 VERSION: Final[str] = getenv_str("VERSION", default="0.1.0")
 SERVER_HOST: Final[str] = getenv_str(
     "SERVER_HOST",
-    default="0.0.0.0",
+    default="127.0.0.1",
 )
 SERVER_PORT: Final[int] = getenv_int(
     "SERVER_PORT",

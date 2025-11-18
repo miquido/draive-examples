@@ -31,7 +31,7 @@ async def thread_response_stream(
             async for chunk in await Conversation.completion(
                 instructions=Template.of("conversation-response-instructions"),
                 input=await GuardrailsSafety.sanitize(message),
-                memory=PostgresModelMemory(str(thread_id)),
+                memory=PostgresModelMemory(thread_id),
                 stream=True,
             ):
                 assert isinstance(chunk, ConversationOutputChunk)  # nosec: B101

@@ -14,7 +14,7 @@ __all__ = (
 
 SERVER_HOST: str = getenv_str(
     "SERVER_HOST",
-    default="0.0.0.0",
+    default="127.0.0.1",
 )
 SERVER_PORT: int = getenv_int(
     "SERVER_PORT",
