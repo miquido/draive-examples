@@ -83,8 +83,8 @@ api:
 
 # Run the CLI chat client
 cli:
-	@if [ -n "$(SESSION_ID)" ]; then \
-		python -m cli --session-id $(SESSION_ID); \
+	@if [ -n "$(THREAD_ID)" ]; then \
+		python -m cli --thread $(THREAD_ID); \
 	else \
 		python -m cli; \
 	fi
