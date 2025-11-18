@@ -23,7 +23,7 @@ Add `OPENAI_API_KEY` env variable to run using OpenAI services.
 - `make format` – applies Ruff fixes and formatting across `src/`.
 - `make lint` – runs Bandit security checks, Ruff lint, and Pyright type analysis.
 - `make api` – starts the FastAPI + Granian server (`python -m api`), perfect for local dev.
-- `make cli` – launches the sample chat client; accepts `SESSION_ID` to resume conversations.
+- `make cli` – launches the sample chat client; accepts `THREAD_ID` to resume conversations.
 - `make docker_run` – rebuilds and runs the API service via Docker Compose; `make sidekicks` brings up Postgres helpers.
 - `make migrations` – executes `python -m migrations` so schema changes stay in sync with Postgres.
 

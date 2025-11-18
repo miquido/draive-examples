@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
@@ -7,18 +8,13 @@ else
 	against=$(git hash-object -t tree /dev/null)
 fi
 
+if [ ! -f ./.venv/bin/activate ]; then
+    echo "Missing .venv/ (run: make venv)" >&2
+    exit 1
+fi
 . ./.venv/bin/activate
 
 make lint
-if test $? != 0
-then
-	exit 1
-fi
+make test
 
-make unit_tests
-if test $? != 0
-then
-	exit 1
-fi
-
-exec git diff-index --check --cached $against --
+exec git diff-index --check --cached "$against" --
