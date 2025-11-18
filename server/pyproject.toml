@@ -7,7 +7,7 @@ name = "assistant"
 version = "0.1.0"
 requires-python = "~=3.13.7"
 dependencies = [
-  "draive[openai, httpx, postgres, opentelemetry]~=0.92.1",
+  "draive[openai, httpx, postgres, opentelemetry]~=0.93.3",
   "fastapi-slim~=0.121",
   "joserfc~=1.4",
 ]

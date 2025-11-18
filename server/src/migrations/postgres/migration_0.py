@@ -6,7 +6,7 @@ async def migration(connection: PostgresConnection) -> None:
     await connection.execute(
         """\
         CREATE TABLE memories (
-            identifier TEXT NOT NULL,
+            identifier UUID NOT NULL,
             created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (identifier)
         );
@@ -15,8 +15,27 @@ async def migration(connection: PostgresConnection) -> None:
     await connection.execute(
         """\
         CREATE TABLE memories_variables (
-            identifier TEXT NOT NULL REFERENCES memories (identifier) ON DELETE CASCADE,
+            memories UUID NOT NULL REFERENCES memories (identifier) ON DELETE CASCADE,
             variables JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+    await connection.execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+            memories_variables_idx
+
+        ON
+            memories_variables (memories, created DESC);
+        """
+    )
+    await connection.execute(
+        """\
+        CREATE TABLE memories_elements (
+            identifier UUID NOT NULL DEFAULT gen_random_uuid(),
+            memories UUID NOT NULL REFERENCES memories (identifier) ON DELETE CASCADE,
+            content JSONB NOT NULL,
             created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (identifier)
         );
@@ -25,40 +44,16 @@ async def migration(connection: PostgresConnection) -> None:
     await connection.execute(
         """
         CREATE INDEX IF NOT EXISTS
-            memories_variables_identifier_idx
+            memories_elements_idx
 
         ON
-            memories_variables (identifier);
+            memories_elements (
+                memories,
+                created DESC
+            );
         """
     )
-    await connection.execute(
-        """\
-        CREATE TABLE memories_elements (
-            element_id BIGSERIAL PRIMARY KEY,
-            identifier TEXT NOT NULL REFERENCES memories (identifier) ON DELETE CASCADE,
-            content JSONB NOT NULL,
-            created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
-        """
-    )
-    await connection.execute(
-        """
-        CREATE INDEX IF NOT EXISTS
-            memories_elements_identifier_idx
 
-        ON
-            memories_elements (identifier);
-        """
-    )
-    await connection.execute(
-        """
-        CREATE INDEX IF NOT EXISTS
-            memories_elements_created_idx
-
-        ON
-            memories_elements (created DESC);
-        """
-    )
     # CONFIGURATIONS
     await connection.execute(
         """\
@@ -110,7 +105,7 @@ async def migration(connection: PostgresConnection) -> None:
     await connection.execute(
         """
         CREATE INDEX IF NOT EXISTS
-            templates_identifier_created_idx
+            templates_idx
 
         ON
             templates (identifier, created DESC);

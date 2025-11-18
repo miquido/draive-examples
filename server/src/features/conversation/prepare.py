@@ -11,6 +11,6 @@ async def thread_prepare(
     variables: Mapping[str, BasicValue] | None = None,
 ) -> UUID:
     thread_id: UUID = uuid4()
-    memory: ModelMemory = PostgresModelMemory(str(thread_id))
+    memory: ModelMemory = PostgresModelMemory(thread_id)
     await memory.maintenance(variables=variables)
     return thread_id

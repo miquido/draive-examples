@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
-from draive import ConversationMessage, ObservabilityLevel, ctx
+from draive import ConversationMessage, ctx
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -33,8 +33,7 @@ router = APIRouter(route_class=JWTAuthorizedAPIRoute)
 async def prepare() -> Response:
     ctx.log_info("Preparing new conversation thread...")
     thread_id: UUID = await thread_prepare()
-    ctx.record(
-        ObservabilityLevel.INFO,
+    ctx.record_info(
         metric="conversation.thread.created",
         value=1,
         kind="counter",
@@ -75,8 +74,7 @@ async def respond(
     request: ConversationThreadRequest,
 ) -> StreamingResponse:
     ctx.log_info(f"...responding in thread ({thread_id})...")
-    ctx.record(
-        ObservabilityLevel.INFO,
+    ctx.record_info(
         metric="conversation.thread.message",
         value=1,
         kind="counter",

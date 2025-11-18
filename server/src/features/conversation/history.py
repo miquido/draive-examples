@@ -19,7 +19,7 @@ async def thread_history(
     *,
     limit: int,
 ) -> Sequence[ConversationMessage]:
-    memory: ModelMemory = PostgresModelMemory(str(thread_id))
+    memory: ModelMemory = PostgresModelMemory(thread_id)
     recalled: ModelMemoryRecall = await memory.recall(limit=limit)
 
     return tuple(_message_from_context(recalled.context))
