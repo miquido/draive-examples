@@ -9,10 +9,10 @@ SOURCES_PATH := src
 -include .env
 
 ifndef UV_VERSION
-	UV_VERSION := 0.9.7
+	UV_VERSION := 0.9.12
 endif
 
-.PHONY: uv_check venv sync lock update format lint migrations example example-vector database
+.PHONY: uv_check venv sync lock update format lint migrations example example-vector sidekicks
 
 
 # Check installed UV version and install if needed
@@ -85,7 +85,7 @@ example:
 example-vector:
 	@python -B -m example.vector
 
-database:
+sidekicks:
 	@echo '# Starting PostgreSQL database with pgvector...'
 	@if docker ps -a --format '{{.Names}}' | grep -q '^postgres-draive-example$$'; then \
 		docker start postgres-draive-example; \

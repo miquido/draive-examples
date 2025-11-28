@@ -9,7 +9,7 @@ SOURCES_PATH := src
 -include .env
 
 ifndef UV_VERSION
-	UV_VERSION := 0.9.9
+	UV_VERSION := 0.9.12
 endif
 
 .PHONY: uv_check venv sync update format lint server migrations docker_run sidekicks cli

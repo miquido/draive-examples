@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterable, Sequence
 from datetime import datetime
 
 from draive import (
@@ -22,7 +22,7 @@ Current time is {time}.
 async def chat_stream(
     message: ConversationMessage,
     memory: Sequence[ConversationMessage],
-) -> AsyncIterator[ConversationOutputChunk]:
+) -> AsyncIterable[ConversationOutputChunk]:
     return await Conversation.completion(
         instructions=INSTRUCTION.format(time=datetime.now().isoformat()),
         input=message,

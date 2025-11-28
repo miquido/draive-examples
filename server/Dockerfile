@@ -35,7 +35,6 @@ FROM build-base AS builder-server
 RUN uv sync --locked --link-mode copy --compile-bytecode --project ./ --extra server && \
   rm -rf /var/cache/uv
 
-
 FROM debian:bookworm-slim AS runtime-base
 
 ENV DEBIAN_FRONTEND=noninteractive \

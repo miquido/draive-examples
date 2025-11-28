@@ -1,7 +1,7 @@
 import json
 from base64 import b64encode
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, cast
 from uuid import UUID
 
@@ -524,13 +524,18 @@ class PostgresDataLayer(BaseDataLayer):
                 if "showInput" in step_dict
                 else None
             )
+            created_at = (
+                datetime.fromisoformat(step_dict["createdAt"])  # pyright: ignore
+                if step_dict.get("createdAt")  # pyright: ignore
+                else datetime.now(timezone.utc)
+            )
+            # Ensure the not-null column is always populated even if callers omit it
+            step_dict.setdefault("createdAt", created_at.isoformat())
             async with ctx.scope("updating-thread-step"):
                 await Postgres.fetch(
                     UPSERT_THREAD_STEP_QUERY,
                     UUID(hex=step_dict["id"]),  # id # pyright: ignore
-                    datetime.fromisoformat(step_dict.get("createdAt"))  # created # pyright: ignore
-                    if step_dict.get("createdAt")  # pyright: ignore
-                    else None,
+                    created_at,  # created
                     UUID(hex=step_dict["threadId"])  # thread_id # pyright: ignore
                     if step_dict.get("threadId")  # pyright: ignore
                     else None,

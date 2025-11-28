@@ -159,13 +159,11 @@ def analysis(subject: str) -> Stage:
     async def analyze_step_stage(
         state: StageState,
     ) -> StageState:
-        @tool(
-            description="Complete analysis when found all required details",
-        )
+        @tool(description="Mark analysis completed when found all required details")
         async def finish_analysis() -> str:
             nonlocal analysis_finished
             analysis_finished = True
-            return "Analysis has been completed, provide your final findings"
+            return "Analysis has been marked as completed, provide your full final findings"
 
         @tool(description="Access the contents of the document page")
         async def read_page(
@@ -224,7 +222,8 @@ Focus on the requested SUBJECT to be verified and confirmed within the document 
 Provide your finding in a clear concise way. Include your reasoning and evidence.
 
 Continue processing and analysing until fully complete.
-When your analysis is fully complete use the `finish_analysis` tool with your findings.
+When your analysis is fully complete mark it as complete using the `finish_analysis` tool,\
+ then present your findings.
 """
 
 

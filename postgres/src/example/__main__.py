@@ -1,4 +1,5 @@
 from asyncio import run
+from uuid import uuid4
 
 from draive import (
     Conversation,
@@ -27,8 +28,8 @@ async def main() -> None:
             PostgresConnectionPool(),  # use postgres connection pool
         ),
     ):
-        with ctx.updated(await OpenAIResponsesConfig.load()):
-            memory = PostgresModelMemory("example_session")
+        with ctx.updated(await OpenAIResponsesConfig.load("OpenAIResponsesConfig")):
+            memory = PostgresModelMemory(uuid4())
             await memory.maintenance()  # initialize session if needed
             result: ConversationMessage = await Conversation.completion(
                 instructions=Template.of("example"),

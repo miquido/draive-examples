@@ -6,13 +6,13 @@ build-backend = "uv_build"
 name = "postgres-example"
 version = "0.1.0"
 requires-python = "~=3.13.7"
-dependencies = ["draive[openai, postgres]>=0.91.4", "pgvector"]
+dependencies = ["draive[openai, postgres]>=0.94.0", "pgvector"]
 
 [project.urls]
 Homepage = "https://miquido.com"
 
 [project.optional-dependencies]
-dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.14"]
+dev = ["bandit~=1.8", "pyright~=1.1", "ruff~=0.14"]
 
 [tool.uv.build-backend]
 namespace = true

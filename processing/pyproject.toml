@@ -6,19 +6,19 @@ build-backend = "uv_build"
 name = "processing-example"
 version = "0.1.0"
 requires-python = "~=3.13.7"
-dependencies = ["draive[gemini]~=0.91.4", "pillow~=11.2", "pypdfium2~=4.30"]
+dependencies = ["draive[gemini]~=0.94.0", "pillow~=11.2", "pypdfium2~=4.30"]
 
 [project.urls]
 Homepage = "https://miquido.com"
 
 [project.optional-dependencies]
-dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.14"]
+dev = ["bandit~=1.8", "pyright~=1.1", "ruff~=0.14"]
 
 [tool.uv.build-backend]
 namespace = true
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py313"
 line-length = 100
 extend-exclude = [".venv", ".git", ".cache"]
 lint.select = ["E", "F", "A", "I", "B", "PL", "W", "C", "RUF", "UP"]
@@ -28,7 +28,7 @@ lint.ignore = ["A005"]
 "__init__.py" = ["F401", "E402"]
 
 [tool.pyright]
-pythonVersion = "3.12"
+pythonVersion = "3.13"
 venvPath = "./.venv"
 include = ["./src"]
 exclude = ["**/node_modules", "**/__pycache__"]
