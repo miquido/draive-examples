@@ -16,7 +16,7 @@ RUN apt-get update && \
   xz-utils && \
   rm -rf /var/lib/apt/lists/*
 
-COPY --from=ghcr.io/astral-sh/uv:0.9.9 /uv /uvx /usr/local/bin/
+COPY --from=ghcr.io/astral-sh/uv:0.9.12 /uv /uvx /usr/local/bin/
 
 RUN mkdir -p /var/cache/uv && uv python install 3.13
 
@@ -34,7 +34,6 @@ FROM build-base AS builder-server
 
 RUN uv sync --locked --link-mode copy --compile-bytecode --project ./ --extra server && \
   rm -rf /var/cache/uv
-
 
 FROM debian:bookworm-slim AS runtime-base
 

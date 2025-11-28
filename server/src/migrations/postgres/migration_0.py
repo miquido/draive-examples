@@ -59,6 +59,7 @@ async def migration(connection: PostgresConnection) -> None:
         """\
         CREATE TABLE configurations (
             identifier TEXT NOT NULL,
+            name TEXT NOT NULL,
             content JSONB NOT NULL,
             created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (identifier, created)
@@ -79,11 +80,13 @@ async def migration(connection: PostgresConnection) -> None:
         INSERT INTO
             configurations (
                 identifier,
+                name,
                 content
             )
 
         VALUES (
             'conversation-response',
+            'OpenAIResponsesConfig',
             '{"model": "gpt-5-mini"}'::jsonb
         );
         """

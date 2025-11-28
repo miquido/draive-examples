@@ -6,18 +6,18 @@ build-backend = "uv_build"
 name = "ChainlitChat"
 version = "1.0.0"
 requires-python = "~=3.13.7"
-dependencies = ["draive[openai, httpx, postgres]~=0.91.4"]
+dependencies = ["draive[openai, httpx, postgres]~=0.94.0"]
 
 [project.optional-dependencies]
 chat = ["chainlit~=2.5", "fastapi~=0.115", "pillow~=11.0"]
 migrations = []
-dev = ["bandit~=1.7", "pyright~=1.1", "ruff~=0.12"]
+dev = ["bandit~=1.8", "pyright~=1.1", "ruff~=0.12"]
 
 [tool.uv.build-backend]
 namespace = true
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py313"
 line-length = 100
 extend-exclude = [".venv", ".git", ".cache"]
 lint.select = ["E", "F", "A", "I", "B", "PL", "W", "C", "RUF", "UP"]
@@ -28,7 +28,7 @@ lint.ignore = ["A005"]
 "./tests/*.py" = ["PLR2004"]
 
 [tool.pyright]
-pythonVersion = "3.12"
+pythonVersion = "3.13"
 venvPath = "."
 venv = ".venv"
 include = ["./src"]
