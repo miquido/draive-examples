@@ -1,7 +1,7 @@
 import json
 from base64 import b64encode
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, cast
 from uuid import UUID
 
@@ -527,10 +527,10 @@ class PostgresDataLayer(BaseDataLayer):
             created_at = (
                 datetime.fromisoformat(step_dict["createdAt"])  # pyright: ignore
                 if step_dict.get("createdAt")  # pyright: ignore
-                else datetime.now(timezone.utc)
+                else datetime.now(UTC)
             )
             # Ensure the not-null column is always populated even if callers omit it
-            step_dict.setdefault("createdAt", created_at.isoformat())
+            step_dict.setdefault("createdAt", created_at.isoformat())  # pyright: ignore[ reportUnknownMemberType]
             async with ctx.scope("updating-thread-step"):
                 await Postgres.fetch(
                     UPSERT_THREAD_STEP_QUERY,
@@ -669,6 +669,10 @@ class PostgresDataLayer(BaseDataLayer):
     # not implemented - ignore
     async def close(self) -> None:
         pass
+
+    # not implemented - ignore
+    async def get_favorite_steps(self, user_id: str) -> list[StepDict]:
+        return []
 
 
 async def fetch_element_content(

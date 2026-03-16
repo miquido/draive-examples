@@ -7,7 +7,7 @@ from types import TracebackType
 from typing import Any, cast, override
 
 import numpy as np
-from draive import DataModel, Embedded, State, TextEmbedding, as_list
+from draive import Embedded, State, TextEmbedding, as_list
 from haiway import ctx
 from tokenizers import AddedToken, Encoding, Tokenizer
 
@@ -80,7 +80,7 @@ class ONNXEmbeddingModel(ONNXModel):
         async with self._session_lock:
             self._initialize_session()
 
-            async def create_texts_embedding[Value: DataModel | State](
+            async def create_texts_embedding[Value: State](
                 values: Sequence[Value] | Sequence[str],
                 /,
                 attribute: Callable[[Value], str] | None = None,
@@ -177,7 +177,7 @@ class ONNXEmbeddingModel(ONNXModel):
                 )
             # Add token type ids if needed
             if "token_type_ids" in self.input_names:
-                onnx_input["token_type_ids"] = np.zeros_like(input_ids, dtype=np.int64)
+                onnx_input["token_type_ids"] = np.zeros_like(input_ids, dtype=np.int64)  # pyright: ignore[reportUnknownArgumentType]
             # Run the model
             model_output: Sequence[Any] = self._run(input_feed=onnx_input)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
             embeddings = model_output[0]

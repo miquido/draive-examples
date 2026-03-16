@@ -6,7 +6,7 @@ build-backend = "uv_build"
 name = "onnx-example"
 version = "0.1.0"
 requires-python = "~=3.13.7"
-dependencies = ["draive~=0.94.0", "onnxruntime~=1.21", "tokenizers~=0.22"]
+dependencies = ["draive[openai, httpx, postgres, opentelemetry]~=0.100.0", "onnxruntime~=1.21", "tokenizers~=0.22",]
 
 [project.urls]
 Homepage = "https://miquido.com"

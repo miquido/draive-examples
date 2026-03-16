@@ -4,29 +4,11 @@ import sys
 import traceback
 from uuid import UUID
 
-from haiway import ctx
+from draive import ctx
 
-from cli.client import APIClient, ResponseChunk
+from cli.client import APIClient
 
 __all__ = ("run_cli",)
-
-
-async def print_message(
-    message: ResponseChunk,
-) -> None:
-    if message.type == "assistant":
-        print(
-            f"{message.content}",
-            end="",
-            flush=True,
-        )
-
-    elif message.type == "event":
-        print(
-            message.content,
-            "\n",
-            flush=True,
-        )
 
 
 async def chat_loop(thread_id: UUID) -> None:
@@ -48,13 +30,39 @@ async def chat_loop(thread_id: UUID) -> None:
 
             print("\n-Assistant-")  # New line between messages
 
-            async for message in APIClient.send_message(
+            last_part: str = "assistant"
+            async for chunk in APIClient.send_message(
                 thread_id=thread_id,
                 text=user_input,
             ):
-                await print_message(message)
+                if last_part != chunk.type:
+                    last_part = chunk.type
+                    if chunk.type == "reasoning":
+                        print(
+                            "\n> ",
+                            end="",
+                        )
 
-            print("\n")  # New line at the end of stream
+                    elif chunk.type == "event":
+                        print(
+                            "\n| ",
+                            end="",
+                        )
+
+                    else:
+                        print("\n---\n", end="")
+
+                print(
+                    f"{chunk.content}",
+                    end="",
+                    flush=True,
+                )
+
+            print(
+                "\n\n",  # New lines at the end of stream
+                end="",
+                flush=True,
+            )
 
         except KeyboardInterrupt:
             print("\nGoodbye!")

@@ -3,15 +3,16 @@ from uuid import UUID
 
 from draive import (
     Conversation,
-    ConversationOutputChunk,
+    ConversationEvent,
     GuardrailsException,
     GuardrailsSafety,
+    ModelReasoningChunk,
     Multimodal,
     Template,
     ctx,
 )
 from draive.openai import OpenAIResponsesConfig
-from draive.postgres import PostgresModelMemory
+from draive.postgres import PostgresConversationMemory
 
 __all__ = ("thread_response_stream",)
 
@@ -28,15 +29,24 @@ async def thread_response_stream(
                 required=True,
             ),
         ):
-            async for chunk in await Conversation.completion(
+            async for chunk in Conversation.completion(
                 instructions=Template.of("conversation-response-instructions"),
-                input=await GuardrailsSafety.sanitize(message),
-                memory=PostgresModelMemory(thread_id),
-                stream=True,
+                memory=PostgresConversationMemory(thread=thread_id),
+                message=await GuardrailsSafety.sanitize(message),
             ):
-                assert isinstance(chunk, ConversationOutputChunk)  # nosec: B101
-                response_chunk: str = chunk.content.to_str().replace("\n", "\\n")
-                yield f"event: response\ndata: {response_chunk}\n\n"
+                if isinstance(chunk, ConversationEvent):
+                    response_chunk: str = (
+                        chunk.content.to_str() if chunk.content is not None else "N/A"
+                    )
+                    yield f"event: event\ndata: {response_chunk}\n\n"
+
+                elif isinstance(chunk, ModelReasoningChunk):
+                    response_chunk: str = chunk.reasoning_chunk.to_str()
+                    yield f"event: reasoning\ndata: {response_chunk}\n\n"
+
+                else:
+                    response_chunk: str = chunk.to_str()
+                    yield f"event: response\ndata: {response_chunk}\n\n"
 
     except GuardrailsException as exc:
         yield "event: response\ndata: \\nResponse has been blocked due to safety reasons\n\n"

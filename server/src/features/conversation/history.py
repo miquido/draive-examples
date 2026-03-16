@@ -1,38 +1,15 @@
-from collections.abc import Generator, Sequence
 from uuid import UUID
 
-from draive import (
-    ConversationMessage,
-    ModelContext,
-    ModelInput,
-    ModelMemory,
-    ModelMemoryRecall,
-    ModelOutput,
-)
-from draive.postgres import PostgresModelMemory
+from draive import ConversationTurn, Paginated, Pagination
+from draive.postgres import PostgresConversationMemory
 
 __all__ = ("thread_history",)
 
 
 async def thread_history(
-    thread_id: UUID,
-    *,
-    limit: int,
-) -> Sequence[ConversationMessage]:
-    memory: ModelMemory = PostgresModelMemory(thread_id)
-    recalled: ModelMemoryRecall = await memory.recall(limit=limit)
-
-    return tuple(_message_from_context(recalled.context))
-
-
-def _message_from_context(context: ModelContext) -> Generator[ConversationMessage]:
-    for element in context:
-        if element.contains_tools:
-            continue  # skip tools messages
-
-        if isinstance(element, ModelInput):
-            yield ConversationMessage.user(element.content)
-
-        else:
-            assert isinstance(element, ModelOutput)  # nosec: B101
-            yield ConversationMessage.model(element.content)
+    thread: UUID | str,
+    pagination: Pagination,
+) -> Paginated[ConversationTurn]:
+    return await PostgresConversationMemory(thread=thread).fetch(
+        pagination=pagination,
+    )

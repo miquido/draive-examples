@@ -20,7 +20,7 @@ class SessionInfo(State):
 
 
 class ResponseChunk(State):
-    type: Literal["assistant", "event"]
+    type: Literal["assistant", "reasoning", "event"]
     content: str
 
 
@@ -81,6 +81,12 @@ class APIClient:
                         if event_type == "response":
                             yield ResponseChunk(
                                 type="assistant",
+                                content=data_content.replace("\\n", "\n"),
+                            )
+
+                        elif event_type == "reasoning":
+                            yield ResponseChunk(
+                                type="reasoning",
                                 content=data_content.replace("\\n", "\n"),
                             )
 

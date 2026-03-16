@@ -6,7 +6,7 @@ build-backend = "uv_build"
 name = "processing-example"
 version = "0.1.0"
 requires-python = "~=3.13.7"
-dependencies = ["draive[gemini]~=0.94.0", "pillow~=11.2", "pypdfium2~=4.30"]
+dependencies = ["draive[gemini, httpx, postgres, opentelemetry]~=0.100.0", "pillow~=11.2", "pypdfium2~=4.30"]
 
 [project.urls]
 Homepage = "https://miquido.com"
