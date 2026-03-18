@@ -10,14 +10,6 @@ Simple, locally running chat solution. Allows selecting from various LLM models 
 
 Custom embedding model running locally with onnx.
 
-## Postgres
-
-Utilizing postgres database for common functionalities.
-
-## Qdrant
-
-Implementing vector index with Qdrant database.
-
 ## Processing
 
 Example of multi-stage data pipeline.

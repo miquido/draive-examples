@@ -26,25 +26,20 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Starting server...")
 
-    disposables: Disposables = Disposables(
+    async with Disposables(
         [
             OpenAI(),
             PostgresConnectionPool(),
         ]
-    )
-
-    try:
+    ) as state:
         app.extra["state"] = (
-            *await disposables.prepare(),
+            *state,
             OpenAIResponsesConfig(model="gpt-5-mini"),
         )
         app.extra["presets"] = ()
 
         logger.info("...server started...")
         yield  # suspend until server shutdown
-
-    finally:
-        await disposables.dispose()
 
     logger.info("...server shutdown!")
 

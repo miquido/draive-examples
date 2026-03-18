@@ -1,14 +1,13 @@
-from collections.abc import Sequence
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from draive import ConversationMessage, ctx
+from draive import ConversationTurn, Paginated, Pagination, ctx
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from starlette.responses import JSONResponse, Response
 
 from api.authorization import JWTAuthorizedAPIRoute
-from features.conversation import thread_history, thread_prepare, thread_response_stream
+from features.conversation import thread_history, thread_response_stream
 
 __all__ = ("router",)
 
@@ -32,7 +31,6 @@ router = APIRouter(route_class=JWTAuthorizedAPIRoute)
 )
 async def prepare() -> Response:
     ctx.log_info("Preparing new conversation thread...")
-    thread_id: UUID = await thread_prepare()
     ctx.record_info(
         metric="conversation.thread.created",
         value=1,
@@ -42,7 +40,7 @@ async def prepare() -> Response:
     return JSONResponse(
         status_code=200,
         content={
-            "thread_id": str(thread_id),
+            "thread_id": str(uuid4()),
         },
     )
 
@@ -70,7 +68,6 @@ class ConversationThreadRequest(BaseModel):
 )
 async def respond(
     thread_id: UUID,
-    # request: Annotated[ConversationThreadRequest, Body(embed=False)],
     request: ConversationThreadRequest,
 ) -> StreamingResponse:
     ctx.log_info(f"...responding in thread ({thread_id})...")
@@ -104,21 +101,23 @@ async def respond(
 )
 async def history(
     thread_id: UUID,
-    limit: int = 1024,  # using high default limit to ensure complete history
+    pagination_token: UUID | None = None,
+    limit: int = 32,
 ) -> Response:
     ctx.log_info(f"Accessing thread ({thread_id}) history...")
-    history: Sequence[ConversationMessage] = await thread_history(
+    history: Paginated[ConversationTurn] = await thread_history(
         thread_id,
-        limit=limit,
+        pagination=Pagination.of(token=pagination_token, limit=limit),
     )
     ctx.log_info(f"...thread ({thread_id}) history has been loaded!")
     return JSONResponse(
         status_code=200,
         content={
+            "pagination_token": history.token,
             "messages": [
                 {
-                    "role": element.role,
-                    "content": element.content.to_str(),
+                    "role": element.turn,
+                    "content": element.content,
                 }
                 for element in history
             ],

@@ -1,8 +1,6 @@
 from collections.abc import Mapping
 
-from joserfc.errors import (
-    JoseError,
-)
+from joserfc.errors import JoseError
 from joserfc.jwk import KeyFlexible
 from joserfc.jwt import ClaimsOption, JWTClaimsRegistry
 from joserfc.jwt import Token as JWTToken

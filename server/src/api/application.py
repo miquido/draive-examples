@@ -32,21 +32,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     else:
         logger.info("Starting api...")
 
-    disposables = Disposables.of(
-        OpenAI(),
-        PostgresConnectionPool(),
-    )
-
     try:
-        app.extra["state"] = (
-            *await disposables.prepare(),
-            LocalJWTVerification(),
-            PostgresConfigurationRepository(),
-            PostgresTemplatesRepository(),
-        )
-        app.extra["otel"] = setup_telemetry()
-        logger.info("...api started...")
-        yield  # suspend until server shutdown
+        async with Disposables.of(
+            OpenAI(),
+            PostgresConnectionPool(),
+        ) as state:
+            app.extra["state"] = (
+                *state,
+                LocalJWTVerification(),
+                PostgresConfigurationRepository(),
+                PostgresTemplatesRepository(),
+            )
+            app.extra["otel"] = setup_telemetry()
+            logger.info("...api started...")
+            yield  # suspend until server shutdown
 
     except BaseException as exc:
         logger.error(
@@ -57,8 +56,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     finally:
         logger.info("...api shutting down...")
-        await disposables.dispose()
-        logger.info("...api closed!")
 
 
 app = FastAPI(

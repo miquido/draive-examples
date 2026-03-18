@@ -16,7 +16,7 @@ RUN apt-get update && \
   xz-utils && \
   rm -rf /var/lib/apt/lists/*
 
-COPY --from=ghcr.io/astral-sh/uv:0.9.12 /uv /uvx /usr/local/bin/
+COPY --from=ghcr.io/astral-sh/uv:0.10.9 /uv /uvx /usr/local/bin/
 
 RUN mkdir -p /var/cache/uv && uv python install 3.13
 

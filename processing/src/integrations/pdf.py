@@ -3,11 +3,11 @@ from pathlib import Path
 from uuid import uuid4
 
 from draive import (
-    DataModel,
     File,
     FileAccess,
     Meta,
     ResourceContent,
+    State,
     asynchronous,
     ctx,
 )
@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 
-class PDFPage(DataModel):
+class PDFPage(State):
     page: int
     text: str
     render: ResourceContent | None

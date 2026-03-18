@@ -33,10 +33,7 @@ def LocalJWTVerification() -> JWTVerification:
         request: Request,
         claims: Mapping[str, str] | None = None,
     ) -> Mapping[str, Any]:
-        authorization_header: str | None = request.headers.get(
-            "Authorization",
-            default=None,
-        )
+        authorization_header: str | None = request.headers.get("Authorization")
         if authorization_header is None:
             raise JWTUnauthorized("Missing authorization token")
 

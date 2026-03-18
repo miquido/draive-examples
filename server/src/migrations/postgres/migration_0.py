@@ -5,52 +5,22 @@ async def migration(connection: PostgresConnection) -> None:
     # MEMORIES
     await connection.execute(
         """\
-        CREATE TABLE memories (
+        CREATE TABLE conversation_memory (
+            thread_id TEXT NOT NULL,
+            turn TEXT NOT NULL,
             identifier UUID NOT NULL,
-            created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (identifier)
+            payload JSONB NOT NULL,
+            created TIMESTAMPTZ NOT NULL,
+            PRIMARY KEY (thread_id, identifier),
+            UNIQUE (thread_id, identifier)
         );
         """
     )
+
     await connection.execute(
         """\
-        CREATE TABLE memories_variables (
-            memories UUID NOT NULL REFERENCES memories (identifier) ON DELETE CASCADE,
-            variables JSONB NOT NULL DEFAULT '{}'::jsonb,
-            created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
-        """
-    )
-    await connection.execute(
-        """
-        CREATE INDEX IF NOT EXISTS
-            memories_variables_idx
-
-        ON
-            memories_variables (memories, created DESC);
-        """
-    )
-    await connection.execute(
-        """\
-        CREATE TABLE memories_elements (
-            identifier UUID NOT NULL DEFAULT gen_random_uuid(),
-            memories UUID NOT NULL REFERENCES memories (identifier) ON DELETE CASCADE,
-            content JSONB NOT NULL,
-            created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (identifier)
-        );
-        """
-    )
-    await connection.execute(
-        """
-        CREATE INDEX IF NOT EXISTS
-            memories_elements_idx
-
-        ON
-            memories_elements (
-                memories,
-                created DESC
-            );
+        CREATE INDEX IF NOT EXISTS conversation_memory_idx
+            ON conversation_memory (thread_id, created DESC, identifier DESC);
         """
     )
 

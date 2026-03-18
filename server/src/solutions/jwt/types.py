@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 from typing import Any, Protocol
 
-from haiway import State
+from draive import State
 from starlette.requests import Request
 from typing_extensions import runtime
 

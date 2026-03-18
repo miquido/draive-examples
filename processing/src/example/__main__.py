@@ -1,19 +1,19 @@
 import argparse
 from asyncio import run
-from collections.abc import AsyncGenerator, Sequence
+from collections.abc import AsyncGenerator, MutableSequence, Sequence
 from typing import Annotated
 
 from draive import (
     Description,
     Meta,
     MultimodalContent,
-    Stage,
-    StageState,
     State,
+    Step,
+    StepState,
     Toolbox,
     ctx,
     setup_logging,
-    stage,
+    step,
     tool,
 )
 from draive.gemini import Gemini, GeminiConfig
@@ -29,17 +29,17 @@ async def processing(
 ) -> None:
     async with ctx.scope(
         "processing",
-        GeminiConfig(model="gemini-2.5-flash"),
+        GeminiConfig(model="gemini-3-flash-preview"),
         disposables=(Gemini(),),
     ):
         pdf_pages: AsyncGenerator[PDFPage] = read_pdf(
             pdf_path,
             render=True,
         )
-        result: MultimodalContent = await Stage.sequence(
+        result: MultimodalContent = await Step.sequence(
             preprocessor(pdf_pages),
             analysis(subject=subject),
-        ).execute()
+        ).run()
 
         print("----------------------[ANSWER]----------------------")
         print(result.to_str())
@@ -59,10 +59,10 @@ class ProcessedDocument(State):
 def preprocessor(
     pdf_pages: AsyncGenerator[PDFPage],
     /,
-) -> Stage:
-    @stage
-    async def processing(state: StageState) -> StageState:
-        processed: list[ProcessedPage] = []
+) -> Step:
+    @step
+    async def processing(state: StepState) -> StepState:
+        processed: MutableSequence[ProcessedPage] = []
 
         @tool(description="Access the contents of the previous page")
         async def previous_page() -> str:
@@ -72,21 +72,23 @@ def preprocessor(
             return processed[-1].content
 
         async def process_page(page: PDFPage) -> ProcessedPage:
-            content: MultimodalContent = (
-                await Stage.completion(
-                    MultimodalContent.of(
+            content: MultimodalContent = await (
+                Step.looping_completion(
+                    instruction=PAGE_PROCESS_INSTRUCTION,
+                    tools=Toolbox.of(
+                        previous_page,
+                    ),
+                    output="text",
+                    input=MultimodalContent.of(
                         f'<DOCUMENT page="{page.page}">\n<TEXT>\n',
                         page.text,
                         "\n</TEXT>\n<RENDER>\n",
                         page.render if page.render is not None else "N/A",
                         "\n</RENDER>\n</DOCUMENT>",
                     ),
-                    instruction=PAGE_PROCESS_INSTRUCTION,
-                    tools=(previous_page,),
-                    output="text",
                 )
                 .with_retry(limit=2)
-                .execute()
+                .run()
             )
 
             return ProcessedPage(
@@ -99,7 +101,7 @@ def preprocessor(
             # do not run concurrently - we want to allow previous page access
             processed.append(await process_page(page))
 
-        return state.updated(ProcessedDocument(pages=processed))
+        return state.updating_artifacts(ProcessedDocument(pages=processed))
 
     return processing
 
@@ -126,19 +128,19 @@ async def consult(
     subject: Annotated[str, Description("Subject to be consulted")],
     context: Annotated[str, Description("Additional context required to understand the subject")],
 ) -> MultimodalContent:
-    with ctx.updated(
+    with ctx.updating(
         GeminiConfig(
-            model="gemini-2.5-pro",
+            model="gemini-3-flash-preview",
             thinking_budget=1024,
         )
     ):
         return (
-            await Stage.completion(
-                f"<SUBJECT>\n{subject}\n</SUBJECT>\n<CONTEXT>\n{context}\n</CONTEXT>",
+            await Step.generating_completion(
                 instruction=CONSULT_PROCESS_INSTRUCTION,
+                input=f"<SUBJECT>\n{subject}\n</SUBJECT>\n<CONTEXT>\n{context}\n</CONTEXT>",
             )
             .with_retry(limit=1)
-            .execute()
+            .run()
         )
 
 
@@ -148,17 +150,13 @@ You are a domain expert in all fields. Consult given SUBJECT providing exhaustiv
 """
 
 
-class Analysis(State):
-    pass
-
-
-def analysis(subject: str) -> Stage:
+def analysis(subject: str) -> Step:
     analysis_finished: bool = False
 
-    @stage
+    @step
     async def analyze_step_stage(
-        state: StageState,
-    ) -> StageState:
+        state: StepState,
+    ) -> StepState:
         @tool(description="Mark analysis completed when found all required details")
         async def finish_analysis() -> str:
             nonlocal analysis_finished
@@ -180,8 +178,7 @@ def analysis(subject: str) -> Stage:
             return document.pages[page].content
 
         return (
-            await Stage.completion(
-                "Continue the analysis",
+            await Step.looping_completion(
                 instruction=ANALYSIS_PROCESS_INSTRUCTION.format(subject=subject),
                 tools=Toolbox.of(
                     read_page,
@@ -189,21 +186,22 @@ def analysis(subject: str) -> Stage:
                     finish_analysis,
                     suggesting=True,
                 ),
+                input="Continue the analysis",
             )
             .with_retry(limit=3)
-            .with_volatile_tools_context()(state=state)
+            .process(state)
         )
 
     async def analysis_stage_condition(
-        state: StageState,
+        state: StepState,
         iteration: int,
     ) -> bool:
         return not analysis_finished
 
-    return Stage.loop(
+    return Step.loop(
         analyze_step_stage,
         condition=analysis_stage_condition,
-    ).with_volatile_tools_context()
+    )
 
 
 ANALYSIS_PROCESS_INSTRUCTION: str = """\

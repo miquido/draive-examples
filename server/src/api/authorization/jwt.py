@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi import Request, Response
 from fastapi.routing import APIRoute
-from haiway import ctx
+from draive import ctx
 
 from solutions.jwt import JWTVerification
 
@@ -16,7 +16,7 @@ class JWTAuthorizedAPIRoute(APIRoute):
         route_handler = super().get_route_handler()
 
         async def authorized_route_handler(request: Request) -> Response:
-            with ctx.updated(await JWTVerification.verify(request)):
+            with ctx.updating(await JWTVerification.verify(request)):
                 # allow accessing jwt payload in requests
                 return await route_handler(request)
 
