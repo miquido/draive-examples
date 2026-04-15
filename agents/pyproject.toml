@@ -1,12 +1,15 @@
 [build-system]
-requires = ["uv_build>=0.9.0,<0.10.0"]
+requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
 
 [project]
-name = "processing-example"
+name = "agents-example"
 version = "0.1.0"
 requires-python = "~=3.13.7"
-dependencies = ["draive[gemini, httpx, postgres, opentelemetry]~=0.101.0", "pillow~=11.2", "pypdfium2~=4.30"]
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "draive[gemini, openai, httpx, opentelemetry]~=0.103.0",
+]
 
 [project.urls]
 Homepage = "https://miquido.com"

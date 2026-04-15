@@ -6,6 +6,7 @@ from typing import Annotated
 from draive import (
     Description,
     Meta,
+    ModelOutput,
     MultimodalContent,
     State,
     Step,
@@ -17,6 +18,7 @@ from draive import (
     tool,
 )
 from draive.gemini import Gemini, GeminiConfig
+from draive.steps.types import StepStream
 
 from integrations.pdf import PDFPage, read_pdf
 
@@ -32,12 +34,13 @@ async def processing(
         GeminiConfig(model="gemini-3-flash-preview"),
         disposables=(Gemini(),),
     ):
-        pdf_pages: AsyncGenerator[PDFPage] = read_pdf(
-            pdf_path,
-            render=True,
-        )
         result: MultimodalContent = await Step.sequence(
-            preprocessor(pdf_pages),
+            preprocessor(
+                read_pdf(
+                    pdf_path,
+                    render=True,
+                )
+            ),
             analysis(subject=subject),
         ).run()
 
@@ -153,10 +156,20 @@ You are a domain expert in all fields. Consult given SUBJECT providing exhaustiv
 def analysis(subject: str) -> Step:
     analysis_finished: bool = False
 
-    @step
+    @Step
+    async def emit_output(
+        state: StepState,
+    ) -> StepStream:
+        if isinstance(state.context[-1], ModelOutput):
+            for part in state.context[-1].content.parts:
+                yield part
+
+        yield state
+
+    @Step
     async def analyze_step_stage(
         state: StepState,
-    ) -> StepState:
+    ) -> StepStream:
         @tool(description="Mark analysis completed when found all required details")
         async def finish_analysis() -> str:
             nonlocal analysis_finished
@@ -177,7 +190,7 @@ def analysis(subject: str) -> Step:
 
             return document.pages[page].content
 
-        return (
+        yield (
             await Step.looping_completion(
                 instruction=ANALYSIS_PROCESS_INSTRUCTION.format(subject=subject),
                 tools=Toolbox.of(
@@ -198,9 +211,12 @@ def analysis(subject: str) -> Step:
     ) -> bool:
         return not analysis_finished
 
-    return Step.loop(
-        analyze_step_stage,
-        condition=analysis_stage_condition,
+    return Step.sequence(
+        Step.loop(
+            analyze_step_stage,
+            condition=analysis_stage_condition,
+        ),
+        emit_output,
     )
 
 
