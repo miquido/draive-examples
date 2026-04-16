@@ -1,6 +1,7 @@
 import argparse
 import os
 from asyncio import run
+from collections.abc import MutableSequence
 from datetime import UTC, datetime
 
 from draive import ctx, setup_logging
@@ -23,8 +24,6 @@ async def prepare(  # noqa: PLR0913
     model: str,
     provider: str,
 ) -> None:
-    current_datetime: datetime = datetime.now(UTC)
-
     async with ctx.scope(
         "preparation",
         GeminiConfig(model=model),
@@ -34,12 +33,14 @@ async def prepare(  # noqa: PLR0913
             HTTPXClient(),
         ),
     ):
+        ctx.log_info(f"Subject: {subject}")
+        accumulator: MutableSequence[str] = []
         async for chunk in manager_agent.call(
             input=(
                 "Prepare a press review on the following topic:"
                 f"\n{subject}"
                 "\n\nConstraints:\n"
-                f"\n- Current date: {current_datetime.date().isoformat()}"
+                f"\n- Current date: {datetime.now(UTC).date().isoformat()}"
                 f"\n- Focus on recent coverage from the last {days_back} days."
                 f"\n- Preferred language locale: {language}."
                 f"\n- Preferred regional focus: {country if country else 'global'}."
@@ -48,7 +49,28 @@ async def prepare(  # noqa: PLR0913
                 "context requires otherwise."
             ),
         ):
-            print(chunk.to_str(), flush=True, end="")
+            accumulator.append(chunk.to_str())
+
+        # remove invalid sources
+        # ## Invalid source
+        result: str = "".join(accumulator)
+        accumulator = []
+        invalid: bool = False
+        for line in result.split("\n"):
+            if invalid:
+                if line == "---":
+                    invalid = False
+
+                else:
+                    continue
+
+            elif line.startswith("## Invalid source"):
+                invalid = True
+
+            else:
+                accumulator.append(line)
+
+        print("\n".join(accumulator))
 
 
 parser = argparse.ArgumentParser(description="Prepare press review")

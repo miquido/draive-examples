@@ -1,4 +1,4 @@
-from draive import Agent, Toolbox
+from draive import Agent, Step, TextContent, Toolbox
 
 from features.tools import web_content
 
@@ -33,12 +33,16 @@ Valid article block must follow exactly this structure:
 </output>
 """.strip()  # noqa: E501
 
-editor_agent = Agent.generative(
+editor_agent = Agent.steps(
+    Step.looping_completion(
+        instructions=EDITOR_INSTRUCTIONS,
+        tools=Toolbox.of(
+            web_content,
+            suggesting=True,
+        ),
+    ),
+    # add separator after the article as we treat the output as final result
+    Step.emitting(TextContent.of("\n---\n")),
     name="editor",
     description="Turns findings and leads into a clear, structured article",
-    instructions=EDITOR_INSTRUCTIONS,
-    tools=Toolbox.of(
-        web_content,
-        suggesting=True,
-    ),
 )
