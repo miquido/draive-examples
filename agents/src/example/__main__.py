@@ -1,6 +1,7 @@
 import argparse
 import os
 from asyncio import run
+from collections.abc import MutableSequence
 from datetime import UTC, datetime
 
 from draive import ctx, setup_logging
@@ -9,6 +10,8 @@ from draive.httpx import HTTPXClient
 from draive.openai import OpenAI, OpenAIResponsesConfig
 
 from features.agents import manager_agent
+from features.agents.render import render_press_review
+from features.integrations.tavily import Tavily
 
 setup_logging("agents")
 
@@ -23,8 +26,6 @@ async def prepare(  # noqa: PLR0913
     model: str,
     provider: str,
 ) -> None:
-    current_datetime: datetime = datetime.now(UTC)
-
     async with ctx.scope(
         "preparation",
         GeminiConfig(model=model),
@@ -32,14 +33,17 @@ async def prepare(  # noqa: PLR0913
         disposables=(
             OpenAI() if provider == "openai" else Gemini(),
             HTTPXClient(),
+            Tavily(),
         ),
     ):
+        ctx.log_info(f"Subject: {subject}")
+        accumulator: MutableSequence[str] = []
         async for chunk in manager_agent.call(
             input=(
                 "Prepare a press review on the following topic:"
                 f"\n{subject}"
                 "\n\nConstraints:\n"
-                f"\n- Current date: {current_datetime.date().isoformat()}"
+                f"\n- Current date: {datetime.now(UTC).date().isoformat()}"
                 f"\n- Focus on recent coverage from the last {days_back} days."
                 f"\n- Preferred language locale: {language}."
                 f"\n- Preferred regional focus: {country if country else 'global'}."
@@ -48,7 +52,11 @@ async def prepare(  # noqa: PLR0913
                 "context requires otherwise."
             ),
         ):
-            print(chunk.to_str(), flush=True, end="")
+            accumulator.append(chunk.to_str())
+
+        # The manager streams chief_editor's <selected_articles> XML as its output;
+        # render it into the final markdown article blocks deterministically.
+        print(render_press_review("".join(accumulator)))
 
 
 parser = argparse.ArgumentParser(description="Prepare press review")
@@ -85,18 +93,18 @@ parser.add_argument(
 parser.add_argument(
     "--model",
     type=str,
-    default=os.environ.get("PRESS_REVIEW_MODEL", "gemini-3-flash-preview"),
+    default=os.environ.get("PRESS_REVIEW_MODEL", "gpt-5-mini"),
     help=(
-        "AI model to use for the workflow, for example gemini-3-pro. "
-        "Defaults to PRESS_REVIEW_MODEL or gemini-3-flash-preview."
+        "AI model to use for the workflow, for example gpt-5-mini. "
+        "Defaults to PRESS_REVIEW_MODEL or gpt-5-mini."
     ),
 )
 parser.add_argument(
     "--provider",
     type=str,
-    default=os.environ.get("PRESS_REVIEW_MODEL_PROVIDER", "gemini"),
+    default=os.environ.get("PRESS_REVIEW_MODEL_PROVIDER", "openai"),
     help=(
-        "AI model provider to use for the workflow, 'google' for gemini or 'openai'. "
+        "AI model provider to use for the workflow, 'gemini' or 'openai'. "
         "Defaults to PRESS_REVIEW_MODEL_PROVIDER or gemini."
     ),
 )
@@ -108,6 +116,10 @@ if args.days_back < 1:
 if args.articles_target < 1:
     parser.error("--articles-target must be at least 1")
 
+provider = args.provider.lower()
+if provider not in {"gemini", "openai"}:
+    parser.error("--provider must be 'gemini' or 'openai'")
+
 run(
     prepare(
         subject=args.subject,
@@ -116,6 +128,6 @@ run(
         country=args.country,
         articles_target=args.articles_target,
         model=args.model,
-        provider=args.provider,
+        provider=provider,
     )
 )

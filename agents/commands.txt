@@ -1,0 +1,39 @@
+python -OO -m example --subject "What’s new in “Coding-First” models: Tracking updates in specialized models (e.g., the Muse Spark family or Claude Mythos) that are setting standards in code generation." >> example_01.md \
+&& \
+python -OO -m example --subject "Evolution of IDEs (Cursor, VS Code, Windsurf): Latest features like 'Cascade' and native agents inside editors that understand the entire project structure (full-stack context)." >> example_02.md \
+&& \
+python -OO -m example --subject "GitHub Copilot updates: Changes in privacy policies, new terms for training models on user code, and features for the Enterprise segment." >> example_03.md \
+&& \
+python -OO -m example --subject "Autonomous engineering agents: Progress in tools like Devin or OpenClaw that can independently fix bugs and deploy patches to production." >> example_04.md \
+&& \
+python -OO -m example --subject "AI in Code Cybersecurity: New tools for real-time vulnerability detection and automatic deployment of security fixes in DevSecOps." >> example_05.md \
+&& \
+python -OO -m example --subject "Alternative coding engines: Updates in tools like Amazon Q Developer or Tabnine, especially regarding support for niche programming languages." >> example_06.md \
+&& \
+python -OO -m example --subject "Industry AI deployments in business: Latest case studies from banking, industry, and logistics showing real cost savings through agent-based automation." >> example_07.md \
+&& \
+python -OO -m example --subject "Legal regulations and the AI Act: Current guidelines for implementing AI systems in companies, model certification, and intellectual property protection." >> example_08.md \
+&& \
+python -OO -m example --subject "Infrastructure and GPU market: Information on compute availability, cloud service pricing, and new investments in AI data centers." >> example_09.md \
+&& \
+python -OO -m example --subject "Multi-model strategies in organizations: Trends in combining different models (e.g., GPT-4o with a local Llama) to optimize cost and accuracy." >> example_10.md \
+&& \
+python -OO -m example --subject "Funding for B2B AI startups: Reports on new investment rounds for companies building automation tools for HR, finance, and sales." >> example_11.md \
+&& \
+python -OO -m example --subject "Microsoft 365 Copilot and Google Workspace: Overview of new features in spreadsheets, text editors, and team communication systems." >> example_12.md \
+&& \
+python -OO -m example --subject "No-code ecosystem (Zapier, Make, n8n): New native AI integrations enabling the creation of autonomous workflows without writing code." >> example_13.md \
+&& \
+python -OO -m example --subject "Personal Knowledge Management (Notion, Obsidian): Updates in 'chatting with your knowledge base' and automatic categorization of company resources." >> example_14.md \
+&& \
+python -OO -m example --subject "Multimodal voice assistants: Advances in voice technologies (e.g., Gemini Live) for meetings and real-time translation." >> example_15.md \
+&& \
+python -OO -m example --subject "Office process automation: New systems for intelligent invoice processing, contract generation, and automated customer onboarding." >> example_16.md \
+&& \
+python -OO -m example --subject "AI video and presentations: Updates in generative tools for quickly creating corporate training and marketing materials." >> example_17.md \
+&& \
+python -OO -m example --subject "Small Language Models (SLM): Advances in models running locally on laptops, ensuring data privacy without sending it to the cloud." >> example_18.md \
+&& \
+python -OO -m example --subject "Security & Shadow AI: News about risks related to uncontrolled AI use by employees and new systems for protecting corporate data." >> example_19.md \
+&& \
+python -OO -m example --subject "AI in team management: New standards for productivity monitoring and managerial support through analytical agents." >> example_20.md
