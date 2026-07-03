@@ -1,32 +1,43 @@
 import ipaddress
-import json
 import re
-from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Annotated
 from urllib.parse import urlparse
 from xml.sax.saxutils import escape  # nosec: B405 B406
 
 from bs4 import BeautifulSoup, Tag
-from draive import HTTPClient, HTTPResponse, getenv_str, tool
+from draive import HTTPClient, HTTPResponse, tool
 
-__all__ = ("web_content",)
+from features.integrations.tavily import TavilyError, TavilySearch
+
+__all__ = (
+    "fetch_web_content",
+    "web_content",
+)
 
 
 @tool(description="Fetch a web page content")
 async def web_content(
-    url: str,
+    url: Annotated[str, "Full url of requested web page"],
 ) -> str:
+    return await fetch_web_content(url)
+
+
+async def fetch_web_content(url: str) -> str:
+    """Fetch and extract readable article text for a single URL.
+
+    Returns a `<content url="..." status="success|error">...</content>` block
+    and never raises, so it can be used both as a model tool and for the
+    writer's automatic source pre-fetching.
+    """
     if not _is_fetchable_url(url):
-        return _render_result(
-            url,
-            status="error",
-            content="Only public HTTP(S) article URLs are allowed",
+        return (
+            f'<content url="{_escape_attr(url)}" status="error">'
+            "Only public HTTP article URLs are allowed</content>"
         )
 
-    response: HTTPResponse
-    body: bytes
+    soup: BeautifulSoup
     try:
-        response = await HTTPClient.get(
+        response: HTTPResponse = await HTTPClient.get(
             url=url,
             headers=BROWSER_HEADERS,
             timeout=DEFAULT_REQUEST_TIMEOUT,
@@ -34,37 +45,30 @@ async def web_content(
         )
 
         if response.status_code >= HTTP_ERROR_STATUS:
-            raise Exception(f"Invalid status code: {response.status_code}")
+            return (
+                f'<content url="{_escape_attr(url)}" status="error">'
+                f"Content access failed with status code: {response.status_code}</content>"
+            )
 
-        body = await response.body()
+        soup: BeautifulSoup = _removing_noise(
+            BeautifulSoup(
+                _checked_response_content(response, body=await response.body()),
+                "html.parser",
+            )
+        )
 
     except Exception as exc:
         return await _render_with_tavily_fallback(
             url,
             message=f"Content access failed: {exc}",
         )
-
-    try:
-        _check_response_content(response, body=body)
-
-    except Exception as exc:
-        return await _render_with_tavily_fallback(
-            url,
-            message=f"Content access failed: {exc}",
-        )
-
-    soup: BeautifulSoup = _removing_noise(BeautifulSoup(body, "html.parser"))
 
     content: str = _extract_article_content(soup)
     if len(content) < MIN_CONTENT_TEXT_LENGTH:
         content = _extract_full_page_content(soup)
 
     if content:
-        return _render_result(
-            url,
-            status="success",
-            content=content,
-        )
+        return f'<content url="{_escape_attr(url)}" status="success">{content}</content>'
 
     else:
         return await _render_with_tavily_fallback(
@@ -78,7 +82,6 @@ DEFAULT_REQUEST_TIMEOUT = 20.0
 MAX_RESPONSE_BYTES = 2_000_000
 MIN_CONTENT_TEXT_LENGTH = 200
 RETRYABLE_HTTP_STATUSES = {401, 403, 406, 409, 429}
-TAVILY_EXTRACT_URL = "https://api.tavily.com/extract"
 BLOCKED_SELECTOR = ",".join(
     (
         "script",
@@ -319,82 +322,22 @@ def _looks_like_block_page(body: bytes) -> bool:
     return bool(sample and BLOCK_PAGE_PATTERN.search(sample))
 
 
-async def _fetch_tavily_content(url: str) -> str:
-    response: HTTPResponse = await HTTPClient.post(
-        url=TAVILY_EXTRACT_URL,
-        headers={
-            "Authorization": f"Bearer {getenv_str('TAVILY_API_KEY', required=True)}",
-            "Content-Type": "application/json",
-        },
-        body=json.dumps(
-            {
-                "urls": [url],
-                "extract_depth": "basic",
-                "format": "text",
-                "include_images": False,
-                "include_favicon": False,
-                "timeout": DEFAULT_REQUEST_TIMEOUT,
-            }
-        ),
-        timeout=DEFAULT_REQUEST_TIMEOUT,
-        follow_redirects=True,
-    )
-
-    if response.status_code >= HTTP_ERROR_STATUS:
-        raise Exception(f"Tavily extract failed with HTTP status {response.status_code}")
-
-    try:
-        payload_data: Mapping[str, Any] = json.loads((await response.body()).decode("utf-8"))
-
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise Exception(f"Tavily extract response could not be parsed: {exc}") from exc
-
-    return _parse_tavily_extract_payload(payload_data)
-
-
-def _parse_tavily_extract_payload(payload_data: Mapping[str, Any]) -> str:
-    match payload_data:
-        case {"results": [*results]}:
-            if content := _extract_tavily_result_content(results):
-                return content
-
-        case {"failed_results": [*results]}:
-            raise Exception("Tavily extract failed")
-
-        case _:
-            pass
-
-    raise Exception("Tavily extract returned no usable page text")
-
-
-def _extract_tavily_result_content(results: Sequence[Any]) -> str:
-    for item in results:
-        match item:
-            case {"raw_content": str() as raw_content}:
-                if content := _trim_post_article_sections(_normalized_plain_text(raw_content)):
-                    return content
-
-            case _:
-                continue
-
-    return ""
-
-
 async def _render_with_tavily_fallback(
     url: str,
     *,
     message: str,
 ) -> str:
     try:
-        tavily_content = await _fetch_tavily_content(url)
+        raw_content = await TavilySearch.extract(url=url)
 
-    except Exception as exc:
+    except TavilyError as exc:
         return _render_result(
             url,
             status="error",
             content=f"{message}; {exc}",
         )
 
+    tavily_content = _trim_post_article_sections(_normalized_plain_text(raw_content))
     if tavily_content:
         return _render_result(
             url,
@@ -409,11 +352,11 @@ async def _render_with_tavily_fallback(
     )
 
 
-def _check_response_content(
+def _checked_response_content(
     response: HTTPResponse,
     *,
     body: bytes,
-) -> None:
+) -> bytes:
     if response.status_code >= HTTP_ERROR_STATUS:
         raise Exception(f"Content access failed with HTTP status {response.status_code}")
 
@@ -425,3 +368,5 @@ def _check_response_content(
 
     if _looks_like_block_page(body):
         raise Exception("Page access was blocked by the publisher anti-bot protection")
+
+    return body

@@ -5,26 +5,27 @@ from features.tools import tavily_news_search
 __all__ = ("searcher_agent",)
 
 SEARCHER_INSTRUCTIONS = """
-<task>
-Search for recent news sources for the assigned topic.
-</task>
+<goal>
+Search for recent news sources for the assigned task.
+</goal>
 
 <rules>
-- Expect the curator handoff to clearly provide topic, time range, language, country, and search
-  angles. The XML-like structure is preferred for clarity, but it is not mandatory.
-- Use `tavily_news_search` to find news sources.
+- Use `search_news` tool to find news sources.
+- Provide all `search_news` arguments according to the task description.
 - Preserve the requested topic, time range, language, and country as closely as the tool allows.
-- If the topic is broad, run a few focused searches instead of one vague search.
-- If coverage is thin, broaden into adjacent concrete angles rather than stopping after the first
-  weak search.
-- Preserve all usable articles returned by the tools unless they are exact URL duplicates.
-- Prefer returning exact URLs from tool output and note clearly when the tool returns no usable results.
+- If the topic is broad, prefer one focused search per concrete subtopic instead of one vague search.
+- If search yields no results for the requested time window, try broadening the topic keywords\
+before giving up.
+- Run additional, focused searches using different keyword angles to broaden results, but do not\
+exceed four searches total.
+- Preserve all usable articles on requested topic returned by the tools unless they are URL duplicates.
+- Provide exact, full URLs of all sources received `search_news` tool.
 - If the tool fails or returns no usable results, say so clearly.
-- Optimize for giving curator enough diverse raw material to form distinct topic groups.
+- Optimize for diverse raw material to form distinct topic groups.
 </rules>
 
 <output>
-Return only search findings using this structure:
+Return your findings using following structure:
 ```
 <search_results>
 <request>
@@ -33,8 +34,7 @@ Return only search findings using this structure:
 <language>[requested language]</language>
 <country>[requested country]</country>
 </request>
-<provider name="tavily" status="ok|error">
-<articles>
+<articles status="ok|error">
 <article>
 <title>[exact title]</title>
 <url>[exact URL]</url>
@@ -43,21 +43,18 @@ Return only search findings using this structure:
 <description>[description if available]</description>
 </article>
 ...
-</articles>
 <error>[error text only when status="error"]</error>
-</provider>
+</articles>
 ...
 </search_results>
 ```
-- Preserve URLs exactly as returned by the tool output.
-- Preserve provider-level errors instead of replacing them with narrative summaries.
-- Do not add commentary outside this structure.
+Do not add anything outside this structure.
 </output>
 """.strip()  # noqa: E501
 
 searcher_agent = Agent.generative(
     name="searcher",
-    description="Finds relevant leads and sources",
+    description="Finds relevant leads and sources given the topic, locale and time period.",
     instructions=SEARCHER_INSTRUCTIONS,
     tools=Toolbox.of(
         tavily_news_search,

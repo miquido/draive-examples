@@ -1,9 +1,8 @@
-from features.tools.google import google_news_search
-from features.tools.pages import web_content
+from features.tools.pages import fetch_web_content, web_content
 from features.tools.tavily import tavily_news_search
 
 __all__ = (
-    "google_news_search",
+    "fetch_web_content",
     "tavily_news_search",
     "web_content",
 )
